@@ -285,6 +285,39 @@ app.post('/reminders/test/:bookingId', async (req, res) => {
   }
 });
 
+/**
+ * Calendar sync endpoint
+ */
+app.post('/api/sync-calendar', async (req, res) => {
+  try {
+    const { propertyId, icalUrl } = req.body;
+
+    if (!propertyId || !icalUrl) {
+      return res.status(400).json({ error: 'Missing propertyId or icalUrl' });
+    }
+
+    console.log(`📅 Syncing calendar for property ${propertyId}...`);
+
+    const result = await syncProperty(propertyId, icalUrl);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: `Synced ${result.count} bookings`,
+        count: result.count
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error
+      });
+    }
+  } catch (error) {
+    console.error('Calendar sync error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 HeyConcierge WhatsApp backend running on port ${PORT}`);
