@@ -1,6 +1,7 @@
 """
 Market Scanner - Discover and filter Polymarket markets
 """
+from __future__ import annotations
 
 import requests
 import time
@@ -211,6 +212,41 @@ class MarketScanner:
             print(f"⚠️ Error fetching orderbook: {e}")
             return {"best_bid": 0, "best_ask": 1.0, "spread": 1.0}
     
+    def scan(self, limit: int = 200) -> list[dict]:
+        """
+        Scan markets and return as dicts for the EasyPoly pipeline.
+        Bridge between the original Market dataclass and the dict-based pipeline.
+        """
+        markets = self.get_all_markets(limit=limit)
+        return [
+            {
+                "market_id": m.slug,
+                "question": m.question,
+                "yes_token": m.yes_token,
+                "no_token": m.no_token,
+                "end_date": m.end_date.isoformat() if m.end_date else None,
+                "volume": m.volume,
+                "liquidity": m.liquidity,
+                "yes_price": m.yes_price,
+                "no_price": m.no_price,
+                "category": m.category,
+                "description": m.description,
+                "active": True,
+            }
+            for m in markets
+        ]
+
+    def sync_to_supabase(self, markets: list[dict]) -> None:
+        """Upsert scanned markets to Supabase."""
+        try:
+            from db.queries import MarketQueries
+            MarketQueries.upsert_markets(markets)
+            from utils.logger import log
+            log("info", f"Synced {len(markets)} markets to Supabase", source="market_scanner")
+        except Exception as e:
+            from utils.logger import log
+            log("warning", f"Failed to sync markets: {e}", source="market_scanner")
+
     def get_market_details(self, slug: str) -> Optional[Market]:
         """Get details for a specific market"""
         try:

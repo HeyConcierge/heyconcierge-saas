@@ -1,27 +1,29 @@
 """
-Configuration for Polymarket Superbot
-Central config for all strategies and execution
+Configuration for EasyPoly (Polymarket Superbot)
+Central config — reads secrets from .env, never hardcoded.
 """
 
 import os
 from typing import Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 # ============================================================================
 # WALLET & EXECUTION
 # ============================================================================
 
-# Wallet credentials
-WALLET_ADDRESS = "0x114B7A51A4cF04897434408bd9003626705a2208"
-PRIVATE_KEY = "0x4badb53d27e3a1142c4bb509e4d00a64645401359a69afc928246666a2edac36"
+WALLET_ADDRESS = os.environ.get("POLYMARKET_WALLET_ADDRESS", "")
+PRIVATE_KEY = os.environ.get("POLYMARKET_PRIVATE_KEY", "")
 
 # Trading mode
-PAPER_MODE = True  # Set to False for live trading
-MAX_DAILY_LOSS_PCT = 10.0  # Stop trading if down >10% in a day
-MAX_POSITION_SIZE_PCT = 20.0  # Max 20% of capital per trade
+PAPER_MODE = os.environ.get("PAPER_MODE", "true").lower() == "true"
+MAX_DAILY_LOSS_PCT = 10.0
+MAX_POSITION_SIZE_PCT = 20.0
 
 # Capital allocation
-STARTING_CAPITAL = 100.0  # Start with $100 (paper mode)
-LIVE_CAPITAL = 5000.0  # Use $5K for live trading
+STARTING_CAPITAL = 100.0
+LIVE_CAPITAL = 5000.0
 
 # ============================================================================
 # API ENDPOINTS
@@ -30,6 +32,27 @@ LIVE_CAPITAL = 5000.0  # Use $5K for live trading
 CLOB_HOST = "https://clob.polymarket.com"
 GAMMA_API = "https://gamma-api.polymarket.com"
 CHAIN_ID = 137  # Polygon mainnet
+
+# ============================================================================
+# API KEYS (from .env)
+# ============================================================================
+
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+PERPLEXITY_API_KEY = os.environ.get("PERPLEXITY_API_KEY", "")
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_ADMIN_CHAT_ID = os.environ.get("TELEGRAM_ADMIN_CHAT_ID", "")
+
+# EasyPoly Bot API (production @EasyPolyBot on Railway)
+EASYPOLY_BOT_URL = os.environ.get("EASYPOLY_BOT_URL", "https://easypoly-bot-production.up.railway.app")
+EASYPOLY_BOT_API_SECRET = os.environ.get("EASYPOLY_BOT_API_SECRET", "easypoly-2026")
+
+# ============================================================================
+# SUPABASE
+# ============================================================================
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 # ============================================================================
 # STRATEGY WEIGHTS
@@ -43,13 +66,26 @@ STRATEGY_WEIGHTS = {
 }
 
 # ============================================================================
+# CONVICTION ENGINE CONFIG (The Analyst — Pillar 1)
+# ============================================================================
+
+CONVICTION_CONFIG = {
+    "model": "claude-sonnet-4-5-20250929",  # Claude Sonnet 4 for analysis
+    "min_conviction_score": 75,              # Only send picks scoring 75+
+    "min_risk_reward": 1.5,                  # Minimum 1.5:1 R/R
+    "min_confidence_factors": 2,             # At least 2 supporting reasons
+    "min_risk_factors": 1,                   # At least 1 identified risk
+    "scan_interval_minutes": 5,              # How often to scan for opportunities
+}
+
+# ============================================================================
 # LLM FORECASTING CONFIG
 # ============================================================================
 
 LLM_CONFIG = {
-    "model": "deepseek-chat",  # Ultra-cheap for cost efficiency
-    "min_edge": 0.05,  # Only trade if edge >5%
-    "min_confidence": "MEDIUM",  # HIGH/MEDIUM/LOW
+    "model": "claude-sonnet-4-5-20250929",
+    "min_edge": 0.05,
+    "min_confidence": "MEDIUM",
     "news_sources": [
         "coindesk.com",
         "theblock.co",
@@ -59,8 +95,18 @@ LLM_CONFIG = {
         "apnews.com"
     ],
     "max_news_age_hours": 24,
-    "twitter_monitoring": True,  # Use existing bird skill
-    "reddit_monitoring": True    # Monitor r/cryptocurrency, r/polymarket
+    "twitter_monitoring": True,
+    "reddit_monitoring": True
+}
+
+# ============================================================================
+# PERPLEXITY CONFIG (real-time news research)
+# ============================================================================
+
+PERPLEXITY_CONFIG = {
+    "model": "sonar-pro",
+    "max_tokens": 1024,
+    "search_recency_filter": "day",  # Only recent results
 }
 
 # ============================================================================
@@ -72,7 +118,7 @@ WHALE_WALLETS = {
         "address": "0x9d84ce0306f8551e02efef1680475fc0f1dc1344",
         "profit": 2400000,
         "specialty": "politics",
-        "min_position_usd": 5000  # Only copy if whale bets >$5K
+        "min_position_usd": 5000
     },
     "fengdubiying": {
         "address": "0x17db3fcd93ba12d38382a0cade24b200185c5f6d",
@@ -101,10 +147,10 @@ WHALE_WALLETS = {
 }
 
 WHALE_COPY_CONFIG = {
-    "position_size_pct": 15,  # Copy with 10-20% of whale size
-    "delay_seconds": 30,  # Wait 30-60 seconds to avoid front-running
+    "position_size_pct": 15,
+    "delay_seconds": 30,
     "max_copies_per_day": 5,
-    "min_whale_conviction": 5000  # Only copy bets >$5K
+    "min_whale_conviction": 5000
 }
 
 # ============================================================================
@@ -112,13 +158,13 @@ WHALE_COPY_CONFIG = {
 # ============================================================================
 
 BOND_CONFIG = {
-    "min_probability": 0.95,  # Only markets >95% certain
-    "max_price": 0.96,  # Must be underpriced
-    "max_time_to_resolution_hours": 72,  # Resolve within 3 days
-    "min_liquidity_usd": 10000,  # Ensure we can exit
-    "max_position_pct": 20,  # Never >20% per bond
-    "min_positions": 5,  # Diversify across 5+ bonds
-    "target_return_pct": 3.0  # Target 3%+ return per trade
+    "min_probability": 0.95,
+    "max_price": 0.96,
+    "max_time_to_resolution_hours": 72,
+    "min_liquidity_usd": 10000,
+    "max_position_pct": 20,
+    "min_positions": 5,
+    "target_return_pct": 3.0
 }
 
 # ============================================================================
@@ -127,23 +173,23 @@ BOND_CONFIG = {
 
 NEWS_CONFIG = {
     "sources": [
-        "https://twitter.com/wublockchain",  # Crypto news
-        "https://twitter.com/zerohedge",      # Breaking market news
-        "https://twitter.com/degen_gambler",  # Polymarket insider
+        "https://twitter.com/wublockchain",
+        "https://twitter.com/zerohedge",
+        "https://twitter.com/degen_gambler",
         "https://www.reddit.com/r/cryptocurrency/new/",
         "https://cryptopanic.com/api/v1/posts/"
     ],
     "keywords_crypto": [
-        "hack", "exploit", "sec", "regulation", 
+        "hack", "exploit", "sec", "regulation",
         "exchange", "binance", "coinbase", "ftx"
     ],
     "keywords_politics": [
         "resign", "fired", "appointed", "indicted",
         "announcement", "breaking"
     ],
-    "reaction_time_seconds": 30,  # Act within 30 seconds
-    "min_edge": 0.10,  # Only trade if LLM sees >10% mispricing
-    "max_positions": 3  # Max 3 scalp trades active
+    "reaction_time_seconds": 30,
+    "min_edge": 0.10,
+    "max_positions": 3
 }
 
 # ============================================================================
@@ -151,12 +197,12 @@ NEWS_CONFIG = {
 # ============================================================================
 
 RISK_LIMITS = {
-    "max_position_size_usd": 20.0,  # Never bet >$20 per trade
+    "max_position_size_usd": 20.0,
     "max_daily_trades": 20,
-    "max_daily_loss_usd": 10.0,  # Stop if lose $10 in a day
-    "max_correlated_positions": 3,  # Don't bet same direction on related markets
+    "max_daily_loss_usd": 10.0,
+    "max_correlated_positions": 3,
     "require_liquidity_check": True,
-    "min_exit_liquidity_usd": 1000  # Must be able to sell $1K instantly
+    "min_exit_liquidity_usd": 1000
 }
 
 # ============================================================================
@@ -167,7 +213,7 @@ LEARNING_CONFIG = {
     "track_all_predictions": True,
     "update_weights_daily": True,
     "min_trades_before_adjustment": 20,
-    "strategy_kill_threshold": -0.15,  # Disable if down >15%
+    "strategy_kill_threshold": -0.15,
     "calibration_window_days": 7
 }
 
@@ -180,7 +226,7 @@ LOGGING_CONFIG = {
     "log_file": "data/superbot.log",
     "save_all_predictions": True,
     "save_orderbook_snapshots": True,
-    "enable_telegram_alerts": False,  # TODO: Add Telegram notifications
+    "enable_telegram_alerts": True,
     "alert_on_trade": True,
     "alert_on_error": True
 }
@@ -221,21 +267,16 @@ def get_strategy_allocation(strategy_name: str) -> float:
 # ============================================================================
 
 __all__ = [
-    "WALLET_ADDRESS",
-    "PRIVATE_KEY",
-    "PAPER_MODE",
-    "CLOB_HOST",
-    "GAMMA_API",
-    "STRATEGY_WEIGHTS",
-    "LLM_CONFIG",
-    "WHALE_WALLETS",
-    "WHALE_COPY_CONFIG",
-    "BOND_CONFIG",
-    "NEWS_CONFIG",
-    "RISK_LIMITS",
-    "LEARNING_CONFIG",
-    "LOGGING_CONFIG",
-    "get_capital",
-    "get_max_position_size",
-    "get_strategy_allocation"
+    "WALLET_ADDRESS", "PRIVATE_KEY", "PAPER_MODE",
+    "CLOB_HOST", "GAMMA_API",
+    "ANTHROPIC_API_KEY", "PERPLEXITY_API_KEY",
+    "TELEGRAM_BOT_TOKEN", "TELEGRAM_ADMIN_CHAT_ID",
+    "EASYPOLY_BOT_URL", "EASYPOLY_BOT_API_SECRET",
+    "SUPABASE_URL", "SUPABASE_KEY", "SUPABASE_SERVICE_KEY",
+    "STRATEGY_WEIGHTS", "CONVICTION_CONFIG",
+    "LLM_CONFIG", "PERPLEXITY_CONFIG",
+    "WHALE_WALLETS", "WHALE_COPY_CONFIG",
+    "BOND_CONFIG", "NEWS_CONFIG",
+    "RISK_LIMITS", "LEARNING_CONFIG", "LOGGING_CONFIG",
+    "get_capital", "get_max_position_size", "get_strategy_allocation"
 ]
