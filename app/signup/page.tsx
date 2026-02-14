@@ -131,7 +131,7 @@ export default function SignupPage() {
         setQrDataUrl(dataUrl)
       } catch (err) {
         console.error('Signup error:', err)
-        alert(`Signup failed: ${err.message || err}`)
+        alert(`Signup failed: ${err instanceof Error ? err.message : String(err)}`)
         setLoading(false)
         return
       }

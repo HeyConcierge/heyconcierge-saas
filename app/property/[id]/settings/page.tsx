@@ -129,7 +129,7 @@ export default function PropertySettingsPage() {
       await loadProperty() // Reload data
     } catch (err) {
       console.error('Save error:', err)
-      alert('❌ Failed to save: ' + err.message)
+      alert('❌ Failed to save: ' + (err instanceof Error ? err.message : 'Unknown error'))
     }
     setSaving(false)
   }
@@ -204,7 +204,7 @@ export default function PropertySettingsPage() {
       alert(`✅ Extracted data from ${pdfFiles.length} PDF(s)!`)
     } catch (err) {
       console.error('PDF extraction error:', err)
-      alert(`❌ Failed to extract PDF: ${err.message}`)
+      alert(`❌ Failed to extract PDF: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
     setExtracting(false)
   }
@@ -251,7 +251,7 @@ export default function PropertySettingsPage() {
       await loadProperty() // Reload to show new images
     } catch (err) {
       console.error('Image upload error:', err)
-      alert(`❌ Failed to upload: ${err.message}`)
+      alert(`❌ Failed to upload: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
     setUploadingImages(false)
   }
@@ -279,7 +279,7 @@ export default function PropertySettingsPage() {
       await loadProperty() // Reload
     } catch (err) {
       console.error('Delete error:', err)
-      alert(`❌ Failed to delete: ${err.message}`)
+      alert(`❌ Failed to delete: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
   }
 
