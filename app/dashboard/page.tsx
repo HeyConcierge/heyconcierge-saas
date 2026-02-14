@@ -160,25 +160,26 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-bg">
       {/* Header */}
-      <header className="px-8 py-4 border-b border-[rgba(108,92,231,0.08)] bg-[rgba(255,248,240,0.85)] backdrop-blur-[20px]">
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-          <Link href="/" className="font-nunito text-xl font-black no-underline flex items-center gap-2">
-            <LogoSVG className="w-8 h-8" />
-            <span className="text-accent">Hey</span><span className="text-dark">Concierge</span>
+      <header className="px-4 sm:px-8 py-4 border-b border-[rgba(108,92,231,0.08)] bg-[rgba(255,248,240,0.85)] backdrop-blur-[20px]">
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between gap-2">
+          <Link href="/" className="font-nunito text-lg sm:text-xl font-black no-underline flex items-center gap-2 flex-shrink-0">
+            <LogoSVG className="w-6 h-6 sm:w-8 sm:h-8" />
+            <span className="text-accent hidden sm:inline">Hey</span><span className="text-dark hidden sm:inline">Concierge</span>
+            <span className="text-accent sm:hidden">HC</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/calendar" className="text-sm text-dark hover:text-primary font-bold">
-              📅 Calendar
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link href="/calendar" className="text-xs sm:text-sm text-dark hover:text-primary font-bold whitespace-nowrap">
+              📅 <span className="hidden sm:inline">Calendar</span>
             </Link>
             
             {/* Organization Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="text-sm font-bold text-dark hover:text-primary flex items-center gap-1"
+                className="text-xs sm:text-sm font-bold text-dark hover:text-primary flex items-center gap-1 max-w-[120px] sm:max-w-none truncate"
               >
-                {organization?.name}
-                <span className="text-xs">▼</span>
+                <span className="truncate">{organization?.name}</span>
+                <span className="text-xs flex-shrink-0">▼</span>
               </button>
               
               {dropdownOpen && (
@@ -232,16 +233,16 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="max-w-[1200px] mx-auto px-8 py-12">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-8 sm:py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-nunito text-4xl font-black mb-2">Your Properties</h1>
-            <p className="text-muted">Manage your AI concierges</p>
+            <h1 className="font-nunito text-2xl sm:text-4xl font-black mb-2">Your Properties</h1>
+            <p className="text-sm sm:text-base text-muted">Manage your AI concierges</p>
           </div>
           <Link
             href="/signup?step=2"
-            className="bg-primary text-white px-6 py-3 rounded-full font-bold hover:-translate-y-0.5 transition-all no-underline"
+            className="bg-primary text-white px-6 py-3 rounded-full font-bold hover:-translate-y-0.5 transition-all no-underline text-center whitespace-nowrap self-start sm:self-auto"
           >
             + Add Property
           </Link>
@@ -261,9 +262,9 @@ export default function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {properties.map((property) => (
-              <div key={property.id} className="bg-white rounded-2xl shadow-card p-6 hover:-translate-y-1 transition-all">
+              <div key={property.id} className="bg-white rounded-2xl shadow-card p-4 sm:p-6 hover:-translate-y-1 transition-all">
                 {property.images?.[0] && (
                   <Link href={`/property/${property.id}`}>
                     <img
