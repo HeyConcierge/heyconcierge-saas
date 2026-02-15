@@ -27,8 +27,8 @@ export default function PropertySettingsPage() {
   const [property, setProperty] = useState<any>(null)
   const [config, setConfig] = useState<any>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [dragActive, setDragActive] = useState(false)
-  const [extracting, setExtracting] = useState(false)
+  const [dragActiveZone, setDragActiveZone] = useState<string | null>(null)
+  const [extractingZone, setExtractingZone] = useState<string | null>(null)
   const [images, setImages] = useState<any[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
 
@@ -140,48 +140,49 @@ export default function PropertySettingsPage() {
     router.push('/login')
   }
 
-  const handleDrag = (e: React.DragEvent) => {
+  type ExtractField = 'wifi_password' | 'checkin_instructions' | 'local_tips' | 'house_rules'
+
+  const handleDrag = (e: React.DragEvent, zone: string) => {
     e.preventDefault()
     e.stopPropagation()
     if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
+      setDragActiveZone(zone)
     } else if (e.type === 'dragleave') {
-      setDragActive(false)
+      setDragActiveZone(null)
     }
   }
 
-  const handleDrop = async (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent, field: ExtractField) => {
     e.preventDefault()
     e.stopPropagation()
-    setDragActive(false)
-    
+    setDragActiveZone(null)
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      await extractPDFs(Array.from(e.dataTransfer.files))
+      await extractPDF(Array.from(e.dataTransfer.files), field)
     }
   }
 
-  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>, field: ExtractField) => {
     if (e.target.files && e.target.files.length > 0) {
-      await extractPDFs(Array.from(e.target.files))
+      await extractPDF(Array.from(e.target.files), field)
     }
   }
 
-  const extractPDFs = async (files: File[]) => {
-    // Filter for PDFs only
+  const extractPDF = async (files: File[], field: ExtractField) => {
     const pdfFiles = files.filter(f => f.type === 'application/pdf' || f.name.endsWith('.pdf'))
-    
+
     if (pdfFiles.length === 0) {
-      alert('❌ Please upload PDF files only')
+      alert('Please upload PDF files only')
       return
     }
 
-    setExtracting(true)
+    setExtractingZone(field)
     try {
       const formData = new FormData()
       pdfFiles.forEach(file => formData.append('pdfs', file))
+      formData.append('field', field)
 
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3004'
-      const response = await fetch(`${backendUrl}/api/extract-pdf`, {
+      const response = await fetch('/api/extract-pdf', {
         method: 'POST',
         body: formData,
       })
@@ -191,22 +192,20 @@ export default function PropertySettingsPage() {
       }
 
       const extracted = await response.json()
-      
-      // Merge extracted data into config
-      setConfig({
-        ...config,
-        wifi_password: extracted.wifi_password || config.wifi_password || '',
-        checkin_instructions: extracted.checkin_instructions || config.checkin_instructions || '',
-        local_tips: extracted.local_tips || config.local_tips || '',
-        house_rules: extracted.house_rules || config.house_rules || '',
-      })
 
-      alert(`✅ Extracted data from ${pdfFiles.length} PDF(s)!`)
+      if (extracted[field] !== null && extracted[field] !== undefined) {
+        setConfig({
+          ...config,
+          [field]: extracted[field],
+        })
+      }
+
+      alert(`Extracted ${field.replace(/_/g, ' ')} from PDF!`)
     } catch (err) {
       console.error('PDF extraction error:', err)
-      alert(`❌ Failed to extract PDF: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      alert(`Failed to extract PDF: ${err instanceof Error ? err.message : 'Unknown error'}`)
     }
-    setExtracting(false)
+    setExtractingZone(null)
   }
 
   const handleImageUpload = async (files: File[], selectedTags: string[]) => {
@@ -436,35 +435,7 @@ export default function PropertySettingsPage() {
                   className="w-full px-4 py-3 rounded-xl border-2 border-[rgba(108,92,231,0.1)] focus:border-primary outline-none transition-all"
                 />
                 
-                {/* WiFi Document Upload */}
-                <div className="mt-4">
-                  <div
-                    className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${
-                      dragActive 
-                        ? 'border-primary bg-[rgba(108,92,231,0.05)]' 
-                        : 'border-[rgba(108,92,231,0.15)] hover:border-primary'
-                    } ${extracting ? 'opacity-50 pointer-events-none' : ''}`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                  >
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      multiple
-                      onChange={handleFileInput}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      disabled={extracting}
-                    />
-                    <div className="pointer-events-none">
-                      <svg className="w-6 h-6 mx-auto mb-1 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <p className="text-dark font-bold text-xs">Drop PDF here</p>
-                    </div>
-                  </div>
-                </div>
+                <PDFDropZone field="wifi_password" dragActiveZone={dragActiveZone} extractingZone={extractingZone} onDrag={handleDrag} onDrop={handleDrop} onFileInput={handleFileInput} />
               </div>
 
               <div>
@@ -477,35 +448,7 @@ export default function PropertySettingsPage() {
                   className="w-full px-4 py-3 rounded-xl border-2 border-[rgba(108,92,231,0.1)] focus:border-primary outline-none transition-all"
                 />
                 
-                {/* Check-in Document Upload */}
-                <div className="mt-4">
-                  <div
-                    className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${
-                      dragActive 
-                        ? 'border-primary bg-[rgba(108,92,231,0.05)]' 
-                        : 'border-[rgba(108,92,231,0.15)] hover:border-primary'
-                    } ${extracting ? 'opacity-50 pointer-events-none' : ''}`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                  >
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      multiple
-                      onChange={handleFileInput}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      disabled={extracting}
-                    />
-                    <div className="pointer-events-none">
-                      <svg className="w-6 h-6 mx-auto mb-1 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <p className="text-dark font-bold text-xs">Drop PDF here</p>
-                    </div>
-                  </div>
-                </div>
+                <PDFDropZone field="checkin_instructions" dragActiveZone={dragActiveZone} extractingZone={extractingZone} onDrag={handleDrag} onDrop={handleDrop} onFileInput={handleFileInput} />
               </div>
 
               <div>
@@ -518,35 +461,7 @@ export default function PropertySettingsPage() {
                   className="w-full px-4 py-3 rounded-xl border-2 border-[rgba(108,92,231,0.1)] focus:border-primary outline-none transition-all"
                 />
                 
-                {/* Local Tips Document Upload */}
-                <div className="mt-4">
-                  <div
-                    className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${
-                      dragActive 
-                        ? 'border-primary bg-[rgba(108,92,231,0.05)]' 
-                        : 'border-[rgba(108,92,231,0.15)] hover:border-primary'
-                    } ${extracting ? 'opacity-50 pointer-events-none' : ''}`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                  >
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      multiple
-                      onChange={handleFileInput}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      disabled={extracting}
-                    />
-                    <div className="pointer-events-none">
-                      <svg className="w-6 h-6 mx-auto mb-1 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <p className="text-dark font-bold text-xs">Drop PDF here</p>
-                    </div>
-                  </div>
-                </div>
+                <PDFDropZone field="local_tips" dragActiveZone={dragActiveZone} extractingZone={extractingZone} onDrag={handleDrag} onDrop={handleDrop} onFileInput={handleFileInput} />
               </div>
 
               <div>
@@ -559,36 +474,7 @@ export default function PropertySettingsPage() {
                   className="w-full px-4 py-3 rounded-xl border-2 border-[rgba(108,92,231,0.1)] focus:border-primary outline-none transition-all"
                 />
                 
-                {/* House Rules Document Upload */}
-                <div className="mt-4">
-                  <div
-                    className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${
-                      dragActive 
-                        ? 'border-primary bg-[rgba(108,92,231,0.05)]' 
-                        : 'border-[rgba(108,92,231,0.15)] hover:border-primary'
-                    } ${extracting ? 'opacity-50 pointer-events-none' : ''}`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                  >
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      multiple
-                      onChange={handleFileInput}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      disabled={extracting}
-                    />
-                    <div className="pointer-events-none">
-                      <svg className="w-8 h-8 mx-auto mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <p className="text-dark font-bold text-sm">Add your documents here</p>
-                      <p className="text-xs text-muted mt-1">(And we will handle the rest😉)</p>
-                    </div>
-                  </div>
-                </div>
+                <PDFDropZone field="house_rules" dragActiveZone={dragActiveZone} extractingZone={extractingZone} onDrag={handleDrag} onDrop={handleDrop} onFileInput={handleFileInput} large />
               </div>
 
               <div>
@@ -643,6 +529,61 @@ export default function PropertySettingsPage() {
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// PDF Drop Zone Component
+function PDFDropZone({ field, dragActiveZone, extractingZone, onDrag, onDrop, onFileInput, large = false }: {
+  field: string
+  dragActiveZone: string | null
+  extractingZone: string | null
+  onDrag: (e: React.DragEvent, zone: string) => void
+  onDrop: (e: React.DragEvent, field: any) => void
+  onFileInput: (e: React.ChangeEvent<HTMLInputElement>, field: any) => void
+  large?: boolean
+}) {
+  const isActive = dragActiveZone === field
+  const isExtracting = extractingZone === field
+
+  return (
+    <div className="mt-4">
+      <div
+        className={`relative border-2 border-dashed rounded-xl ${large ? 'p-6' : 'p-4'} text-center transition-all ${
+          isActive ? 'border-primary bg-[rgba(108,92,231,0.05)]' : 'border-[rgba(108,92,231,0.15)] hover:border-primary'
+        } ${isExtracting ? 'opacity-50 pointer-events-none' : ''}`}
+        onDragEnter={(e) => onDrag(e, field)}
+        onDragLeave={(e) => onDrag(e, field)}
+        onDragOver={(e) => onDrag(e, field)}
+        onDrop={(e) => onDrop(e, field)}
+      >
+        <input
+          type="file"
+          accept=".pdf"
+          multiple
+          onChange={(e) => onFileInput(e, field)}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          disabled={extractingZone !== null}
+        />
+        <div className="pointer-events-none">
+          {isExtracting ? (
+            <>
+              <div className={`animate-spin ${large ? 'w-8 h-8' : 'w-6 h-6'} mx-auto mb-1 border-2 border-primary border-t-transparent rounded-full`}></div>
+              <p className={`text-dark font-bold ${large ? 'text-sm' : 'text-xs'}`}>Extracting...</p>
+            </>
+          ) : (
+            <>
+              <svg className={`${large ? 'w-8 h-8' : 'w-6 h-6'} mx-auto ${large ? 'mb-2' : 'mb-1'} text-primary`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className={`text-dark font-bold ${large ? 'text-sm' : 'text-xs'}`}>
+                {large ? 'Add your documents here' : 'Drop PDF here'}
+              </p>
+              {large && <p className="text-xs text-muted mt-1">(And we will handle the rest)</p>}
+            </>
+          )}
         </div>
       </div>
     </div>
