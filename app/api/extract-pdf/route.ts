@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { PDFParse } from 'pdf-parse'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -31,14 +32,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No PDF files uploaded' }, { status: 400 })
     }
 
-    // Dynamic import to avoid pdf-parse test fixture issue on Vercel
-    const pdfParse = (await import('pdf-parse')).default
-
     const allTexts: string[] = []
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer())
-      const pdfData = await pdfParse(buffer)
-      allTexts.push(pdfData.text)
+      const parser = new PDFParse({ data: new Uint8Array(buffer) })
+      const result = await parser.getText()
+      allTexts.push(result.text)
+      await parser.destroy()
     }
 
     const combinedText = allTexts.join('\n\n--- NEXT DOCUMENT ---\n\n')
