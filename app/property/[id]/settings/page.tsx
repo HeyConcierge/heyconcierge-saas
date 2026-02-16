@@ -1,10 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import LogoSVG from '@/components/LogoSVG'
+import AnimatedMascot from '@/components/AnimatedMascot'
+import { ToastProvider, useToast } from '@/components/Toast'
 import { supabase } from '@/lib/supabase'
+import dynamic from 'next/dynamic'
+
+const TestConcierge = dynamic(() => import('@/components/TestConcierge'), { ssr: false })
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null
@@ -17,10 +21,20 @@ function getCookie(name: string): string | null {
   return null
 }
 
-export default function PropertySettingsPage() {
+// Wrap the page in a ToastProvider
+export default function PropertySettingsPageWrapper() {
+  return (
+    <ToastProvider>
+      <PropertySettingsPage />
+    </ToastProvider>
+  )
+}
+
+function PropertySettingsPage() {
   const router = useRouter()
   const params = useParams()
   const propertyId = params.id as string
+  const { toast } = useToast()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -33,6 +47,12 @@ export default function PropertySettingsPage() {
   const [pdfExtractError, setPdfExtractError] = useState<string | null>(null)
   const [images, setImages] = useState<any[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
+  const [showTestChat, setShowTestChat] = useState(false)
+
+  // Track unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const savedPropertyRef = useRef<any>(null)
+  const savedConfigRef = useRef<any>(null)
 
   useEffect(() => {
     const email = getCookie('user_email')
@@ -43,6 +63,66 @@ export default function PropertySettingsPage() {
     setUserEmail(email)
     loadProperty()
   }, [])
+
+  // Warn on tab close with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [hasUnsavedChanges])
+
+  // Detect unsaved changes
+  const checkForChanges = useCallback((newProp: any, newConfig: any) => {
+    if (!savedPropertyRef.current || !savedConfigRef.current) return
+    const propChanged = JSON.stringify({
+      name: newProp?.name,
+      address: newProp?.address,
+      property_type: newProp?.property_type,
+      whatsapp_number: newProp?.whatsapp_number,
+      ical_url: newProp?.ical_url,
+      latitude: newProp?.latitude,
+      longitude: newProp?.longitude,
+    }) !== JSON.stringify({
+      name: savedPropertyRef.current.name,
+      address: savedPropertyRef.current.address,
+      property_type: savedPropertyRef.current.property_type,
+      whatsapp_number: savedPropertyRef.current.whatsapp_number,
+      ical_url: savedPropertyRef.current.ical_url,
+      latitude: savedPropertyRef.current.latitude,
+      longitude: savedPropertyRef.current.longitude,
+    })
+    const configChanged = JSON.stringify({
+      wifi_password: newConfig?.wifi_password || '',
+      checkin_instructions: newConfig?.checkin_instructions || '',
+      local_tips: newConfig?.local_tips || '',
+      house_rules: newConfig?.house_rules || '',
+      booking_url: newConfig?.booking_url || '',
+    }) !== JSON.stringify({
+      wifi_password: savedConfigRef.current.wifi_password || '',
+      checkin_instructions: savedConfigRef.current.checkin_instructions || '',
+      local_tips: savedConfigRef.current.local_tips || '',
+      house_rules: savedConfigRef.current.house_rules || '',
+      booking_url: savedConfigRef.current.booking_url || '',
+    })
+    setHasUnsavedChanges(propChanged || configChanged)
+  }, [])
+
+  const updateProperty = (updates: any) => {
+    const newProp = { ...property, ...updates }
+    setProperty(newProp)
+    checkForChanges(newProp, config)
+  }
+
+  const updateConfig = (updates: any) => {
+    const newConfig = { ...config, ...updates }
+    setConfig(newConfig)
+    checkForChanges(property, newConfig)
+  }
 
   const loadProperty = async () => {
     setLoading(true)
@@ -55,10 +135,13 @@ export default function PropertySettingsPage() {
 
       if (prop) {
         setProperty(prop)
+        savedPropertyRef.current = { ...prop }
         const configData = Array.isArray(prop.property_config_sheets)
           ? prop.property_config_sheets[0]
           : prop.property_config_sheets
-        setConfig(configData || {})
+        const cfg = configData || {}
+        setConfig(cfg)
+        savedConfigRef.current = { ...cfg }
       }
 
       const { data: propertyImages } = await supabase
@@ -74,6 +157,7 @@ export default function PropertySettingsPage() {
       console.error('Load error:', err)
     }
     setLoading(false)
+    setHasUnsavedChanges(false)
   }
 
   const handleSave = async () => {
@@ -122,11 +206,14 @@ export default function PropertySettingsPage() {
         if (error) throw error
       }
 
-      alert('Settings saved!')
+      toast('Settings saved!', 'success')
+      savedPropertyRef.current = { ...property }
+      savedConfigRef.current = { ...config }
+      setHasUnsavedChanges(false)
       await loadProperty()
     } catch (err) {
       console.error('Save error:', err)
-      alert('Failed to save: ' + (err instanceof Error ? err.message : 'Unknown error'))
+      toast('Failed to save: ' + (err instanceof Error ? err.message : 'Unknown error'), 'error')
     }
     setSaving(false)
   }
@@ -167,7 +254,7 @@ export default function PropertySettingsPage() {
     const pdfFiles = files.filter(f => f.type === 'application/pdf' || f.name.endsWith('.pdf'))
 
     if (pdfFiles.length === 0) {
-      alert('Please upload PDF files only')
+      toast('Please upload PDF files only', 'error')
       return
     }
 
@@ -197,14 +284,18 @@ export default function PropertySettingsPage() {
       if (extracted.house_rules) { updates.house_rules = extracted.house_rules; filledFields.push('House rules') }
 
       if (Object.keys(updates).length > 0) {
-        setConfig({ ...config, ...updates })
+        updateConfig(updates)
       }
 
       const fileName = pdfFiles.length === 1 ? pdfFiles[0].name : `${pdfFiles.length} PDFs`
       setPdfExtractedFile({ name: fileName, fields: filledFields })
+      if (filledFields.length > 0) {
+        toast(`Extracted ${filledFields.join(', ')} from PDF`, 'success')
+      }
     } catch (err) {
       console.error('PDF extraction error:', err)
       setPdfExtractError(err instanceof Error ? err.message : 'Extraction failed')
+      toast('PDF extraction failed', 'error')
     }
     setPdfExtracting(false)
   }
@@ -216,7 +307,7 @@ export default function PropertySettingsPage() {
 
   const handleImageUpload = async (files: File[], selectedTags: string[]) => {
     if (files.length === 0 || selectedTags.length === 0) {
-      alert('Please select at least one image and one tag')
+      toast('Please select at least one image and one tag', 'error')
       return
     }
 
@@ -249,11 +340,11 @@ export default function PropertySettingsPage() {
         if (dbError) throw dbError
       }
 
-      alert(`Uploaded ${files.length} image(s)!`)
+      toast(`Uploaded ${files.length} image(s)!`, 'success')
       await loadProperty()
     } catch (err) {
       console.error('Image upload error:', err)
-      alert(`Failed to upload: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast(`Failed to upload: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error')
     }
     setUploadingImages(false)
   }
@@ -275,11 +366,11 @@ export default function PropertySettingsPage() {
 
       if (error) throw error
 
-      alert('Image deleted!')
+      toast('Image deleted', 'success')
       await loadProperty()
     } catch (err) {
       console.error('Delete error:', err)
-      alert(`Failed to delete: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      toast(`Failed to delete: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error')
     }
   }
 
@@ -318,10 +409,10 @@ export default function PropertySettingsPage() {
   return (
     <div className="min-h-screen bg-bg">
       {/* Header */}
-      <header className="px-8 py-4 border-b border-[rgba(108,92,231,0.08)] bg-[rgba(255,248,240,0.85)] backdrop-blur-[20px]">
+      <header className="px-8 py-4 border-b border-[rgba(108,92,231,0.08)] bg-[rgba(255,248,240,0.85)] backdrop-blur-[20px] sticky top-0 z-30">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <Link href="/" className="font-nunito text-xl font-black no-underline flex items-center gap-2">
-            <LogoSVG className="w-8 h-8" />
+            <AnimatedMascot mood="idle" size={32} />
             <span className="text-accent">Hey</span><span className="text-dark">Concierge</span>
           </Link>
           <div className="flex items-center gap-4">
@@ -334,6 +425,19 @@ export default function PropertySettingsPage() {
         </div>
       </header>
 
+      {/* Unsaved changes bar */}
+      {hasUnsavedChanges && (
+        <div className="sticky top-[57px] z-20 bg-gradient-to-r from-[#FDCB6E] to-[#F9CA24] px-4 py-2 text-center" style={{ animation: 'slideDown 0.3s ease-out' }}>
+          <div className="flex items-center justify-center gap-2 text-sm font-bold text-dark">
+            <div className="w-2 h-2 rounded-full bg-orange animate-pulse" />
+            You have unsaved changes
+            <button onClick={handleSave} disabled={saving} className="ml-2 px-4 py-1 bg-dark text-white rounded-full text-xs font-bold hover:bg-primary transition-all">
+              {saving ? 'Saving...' : 'Save now'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-[800px] mx-auto px-8 py-12 space-y-6">
         {/* Page header with completion */}
         <div className="flex items-start justify-between">
@@ -341,21 +445,32 @@ export default function PropertySettingsPage() {
             <h1 className="font-nunito text-4xl font-black mb-1">{property.name}</h1>
             <p className="text-muted">Configure what your AI concierge knows</p>
           </div>
-          {config && (
-            <div className="flex items-center gap-3 bg-white rounded-2xl shadow-card px-5 py-3">
-              <div className="relative w-11 h-11">
-                <svg className="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E8E4F0" strokeWidth="3" />
-                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={completedCount === totalCount ? '#55EFC4' : '#6C5CE7'} strokeWidth="3" strokeDasharray={`${(completedCount / totalCount) * 100}, 100`} strokeLinecap="round" />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-black text-dark">{completedCount}/{totalCount}</span>
+          <div className="flex items-center gap-3">
+            {/* Test Concierge button */}
+            <button
+              onClick={() => setShowTestChat(true)}
+              className="flex items-center gap-2 bg-gradient-to-r from-primary to-[#A29BFE] text-white px-5 py-2.5 rounded-full font-bold text-sm hover:-translate-y-0.5 hover:shadow-card-hover transition-all group"
+            >
+              <AnimatedMascot mood="happy" size={24} />
+              <span>Test Concierge</span>
+              <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </button>
+            {config && (
+              <div className="flex items-center gap-3 bg-white rounded-2xl shadow-card px-5 py-3">
+                <div className="relative w-11 h-11">
+                  <svg className="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E8E4F0" strokeWidth="3" />
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={completedCount === totalCount ? '#55EFC4' : '#6C5CE7'} strokeWidth="3" strokeDasharray={`${(completedCount / totalCount) * 100}, 100`} strokeLinecap="round" />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-xs font-black text-dark">{completedCount}/{totalCount}</span>
+                </div>
+                <div className="text-xs">
+                  <p className="font-bold text-dark">{completedCount === totalCount ? 'All set!' : 'Setup progress'}</p>
+                  <p className="text-muted">{completionItems.filter(i => !i.done).map(i => i.label).join(', ') || 'Ready for guests'}</p>
+                </div>
               </div>
-              <div className="text-xs">
-                <p className="font-bold text-dark">{completedCount === totalCount ? 'All set!' : 'Setup progress'}</p>
-                <p className="text-muted">{completionItems.filter(i => !i.done).map(i => i.label).join(', ') || 'Ready for guests'}</p>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Section 1: Property Details */}
@@ -373,11 +488,11 @@ export default function PropertySettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold mb-1.5 text-dark">Property Name</label>
-                <input type="text" value={property.name} onChange={(e) => setProperty({ ...property, name: e.target.value })} className={inputClass} />
+                <input type="text" value={property.name} onChange={(e) => updateProperty({ name: e.target.value })} className={inputClass} />
               </div>
               <div>
                 <label className="block text-sm font-bold mb-1.5 text-dark">Property Type</label>
-                <select value={property.property_type} onChange={(e) => setProperty({ ...property, property_type: e.target.value })} className={inputClass}>
+                <select value={property.property_type} onChange={(e) => updateProperty({ property_type: e.target.value })} className={inputClass}>
                   <option value="Apartment">Apartment</option>
                   <option value="House">House</option>
                   <option value="Villa">Villa</option>
@@ -392,29 +507,29 @@ export default function PropertySettingsPage() {
 
             <div>
               <label className="block text-sm font-bold mb-1.5 text-dark">Address</label>
-              <input type="text" value={property.address} onChange={(e) => setProperty({ ...property, address: e.target.value })} className={inputClass} />
+              <input type="text" value={property.address} onChange={(e) => updateProperty({ address: e.target.value })} className={inputClass} />
             </div>
 
             <div>
               <label className="block text-sm font-bold mb-1.5 text-dark">WhatsApp Number</label>
-              <input type="text" value={property.whatsapp_number || ''} onChange={(e) => setProperty({ ...property, whatsapp_number: e.target.value })} placeholder="+1234567890" className={inputClass} />
+              <input type="text" value={property.whatsapp_number || ''} onChange={(e) => updateProperty({ whatsapp_number: e.target.value })} placeholder="+1234567890" className={inputClass} />
               <p className="text-xs text-muted mt-1.5">Include country code (e.g., +47 for Norway)</p>
             </div>
 
             <div>
               <label className="block text-sm font-bold mb-1.5 text-dark">iCal URL <span className="font-normal text-muted">(optional)</span></label>
-              <input type="text" value={property.ical_url || ''} onChange={(e) => setProperty({ ...property, ical_url: e.target.value })} placeholder="https://airbnb.com/calendar/ical/..." className={inputClass} />
+              <input type="text" value={property.ical_url || ''} onChange={(e) => updateProperty({ ical_url: e.target.value })} placeholder="https://airbnb.com/calendar/ical/..." className={inputClass} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold mb-1.5 text-dark">Latitude <span className="font-normal text-muted">(optional)</span></label>
-                <input type="number" step="0.000001" value={property.latitude || ''} onChange={(e) => setProperty({ ...property, latitude: e.target.value })} placeholder="59.9139" className={inputClass} />
+                <input type="number" step="0.000001" value={property.latitude || ''} onChange={(e) => updateProperty({ latitude: e.target.value })} placeholder="59.9139" className={inputClass} />
                 <p className="text-xs text-muted mt-1.5">For weather-aware responses</p>
               </div>
               <div>
                 <label className="block text-sm font-bold mb-1.5 text-dark">Longitude <span className="font-normal text-muted">(optional)</span></label>
-                <input type="number" step="0.000001" value={property.longitude || ''} onChange={(e) => setProperty({ ...property, longitude: e.target.value })} placeholder="10.7522" className={inputClass} />
+                <input type="number" step="0.000001" value={property.longitude || ''} onChange={(e) => updateProperty({ longitude: e.target.value })} placeholder="10.7522" className={inputClass} />
                 <p className="text-xs text-muted mt-1.5">Find on Google Maps</p>
               </div>
             </div>
@@ -506,7 +621,7 @@ export default function PropertySettingsPage() {
               icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.858 15.355-5.858 21.213 0" /></svg>}
               color="primary"
             >
-              <input type="text" value={config.wifi_password || ''} onChange={(e) => setConfig({ ...config, wifi_password: e.target.value })} placeholder="Network name & password" className={inputClass} />
+              <input type="text" value={config.wifi_password || ''} onChange={(e) => updateConfig({ wifi_password: e.target.value })} placeholder="Network name & password" className={inputClass} />
             </AIField>
 
             {/* Check-in */}
@@ -515,7 +630,7 @@ export default function PropertySettingsPage() {
               icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>}
               color="accent"
             >
-              <textarea value={config.checkin_instructions || ''} onChange={(e) => setConfig({ ...config, checkin_instructions: e.target.value })} placeholder="Key location, door codes, arrival steps, parking..." rows={3} className={inputClass} />
+              <textarea value={config.checkin_instructions || ''} onChange={(e) => updateConfig({ checkin_instructions: e.target.value })} placeholder="Key location, door codes, arrival steps, parking..." rows={3} className={inputClass} />
             </AIField>
 
             {/* Local Tips */}
@@ -524,7 +639,7 @@ export default function PropertySettingsPage() {
               icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
               color="yellow"
             >
-              <textarea value={config.local_tips || ''} onChange={(e) => setConfig({ ...config, local_tips: e.target.value })} placeholder="Restaurants, attractions, transport, things to do..." rows={3} className={inputClass} />
+              <textarea value={config.local_tips || ''} onChange={(e) => updateConfig({ local_tips: e.target.value })} placeholder="Restaurants, attractions, transport, things to do..." rows={3} className={inputClass} />
             </AIField>
 
             {/* House Rules */}
@@ -533,7 +648,7 @@ export default function PropertySettingsPage() {
               icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>}
               color="pink"
             >
-              <textarea value={config.house_rules || ''} onChange={(e) => setConfig({ ...config, house_rules: e.target.value })} placeholder="Quiet hours, smoking policy, checkout, dos & don'ts..." rows={3} className={inputClass} />
+              <textarea value={config.house_rules || ''} onChange={(e) => updateConfig({ house_rules: e.target.value })} placeholder="Quiet hours, smoking policy, checkout, dos & don'ts..." rows={3} className={inputClass} />
             </AIField>
           </div>
         </div>
@@ -568,14 +683,28 @@ export default function PropertySettingsPage() {
             </div>
             <div>
               <h2 className="font-nunito text-lg font-black text-dark">Links & Integrations</h2>
-              <p className="text-xs text-muted">Connect your booking platform and data sources</p>
+              <p className="text-xs text-muted">Connect your booking platform</p>
             </div>
           </div>
           <div className="px-8 py-6 space-y-4">
-            <div>
-              <label className="block text-sm font-bold mb-1.5 text-dark">Booking URL <span className="font-normal text-muted">(optional)</span></label>
-              <input type="url" value={config.booking_url || ''} onChange={(e) => setConfig({ ...config, booking_url: e.target.value })} placeholder="https://airbnb.com/rooms/123456" className={inputClass} />
-              <p className="text-xs text-muted mt-1.5">When guests ask about extending their stay, the AI shares this link</p>
+            <div className="rounded-2xl border-l-4 border-blue/30 bg-blue/5 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-blue/10 text-blue">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                </div>
+                <label className="text-sm font-bold text-dark">Booking URL</label>
+                <span className="text-xs text-muted font-normal">(optional)</span>
+              </div>
+              <input type="url" value={config.booking_url || ''} onChange={(e) => updateConfig({ booking_url: e.target.value })} placeholder="https://airbnb.com/rooms/123456" className={inputClass} />
+              <p className="text-xs text-muted mt-2">When guests ask about extending their stay, the AI shares this link</p>
+            </div>
+
+            <div className="rounded-2xl border-2 border-dashed border-[rgba(116,185,255,0.2)] bg-[rgba(116,185,255,0.03)] p-5 text-center">
+              <div className="flex items-center justify-center gap-2 text-muted">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                <p className="text-sm font-bold">More integrations coming soon</p>
+              </div>
+              <p className="text-xs text-muted mt-1">Google Calendar, PMS systems, and more</p>
             </div>
           </div>
         </div>
@@ -584,11 +713,31 @@ export default function PropertySettingsPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full bg-primary text-white px-8 py-4 rounded-full font-bold text-lg hover:-translate-y-0.5 hover:shadow-card-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full px-8 py-4 rounded-full font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+            hasUnsavedChanges
+              ? 'bg-gradient-to-r from-primary to-[#A29BFE] text-white hover:-translate-y-0.5 hover:shadow-card-hover animate-pulse'
+              : 'bg-primary text-white hover:-translate-y-0.5 hover:shadow-card-hover'
+          }`}
         >
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? 'Saving...' : hasUnsavedChanges ? 'Save Changes' : 'Save Changes'}
         </button>
       </div>
+
+      {/* Test Concierge modal */}
+      {showTestChat && (
+        <TestConcierge
+          property={property}
+          config={config}
+          onClose={() => setShowTestChat(false)}
+        />
+      )}
+
+      <style jsx global>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-100%); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   )
 }
@@ -687,7 +836,6 @@ function PropertyImagesUpload({ propertyId, images, onUpload, onDelete, uploadin
 
   const handleUpload = async () => {
     if (selectedFiles.length === 0 || selectedTags.length === 0) {
-      alert('Please select files and at least one tag')
       return
     }
 
