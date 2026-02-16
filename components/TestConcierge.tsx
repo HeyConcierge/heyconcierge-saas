@@ -59,18 +59,22 @@ export default function TestConcierge({ property, config, onClose }: TestConcier
         body: JSON.stringify({ message: text.trim(), property, config }),
       })
 
-      if (!response.ok) throw new Error('Failed to get response')
-
       const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get response')
+      }
+
       const conciergeMsg: Message = { id: nextIdRef.current++, role: 'concierge', text: data.reply }
       setMessages(prev => [...prev, conciergeMsg])
       setMascotMood('happy')
       setTimeout(() => setMascotMood('idle'), 2000)
     } catch (err) {
+      const errorText = err instanceof Error ? err.message : 'Unknown error'
       const errorMsg: Message = {
         id: nextIdRef.current++,
         role: 'concierge',
-        text: "Oops! I couldn't connect. Make sure ANTHROPIC_API_KEY is set in your environment."
+        text: `Oops! ${errorText}`
       }
       setMessages(prev => [...prev, errorMsg])
       setMascotMood('idle')

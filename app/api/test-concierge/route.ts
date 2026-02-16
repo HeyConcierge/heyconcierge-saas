@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
-
 export async function POST(request: NextRequest) {
   try {
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'ANTHROPIC_API_KEY is not configured on the server' },
+        { status: 500 }
+      )
+    }
+
+    const anthropic = new Anthropic({ apiKey })
+
     const { message, property, config } = await request.json()
 
     if (!message || !property) {
@@ -75,9 +81,7 @@ ${propertyContext.trim()}`
     return NextResponse.json({ reply })
   } catch (error) {
     console.error('Test concierge error:', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to get AI response' },
-      { status: 500 }
-    )
+    const msg = error instanceof Error ? error.message : 'Failed to get AI response'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
