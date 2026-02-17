@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import AnimatedMascot from './AnimatedMascot'
+import AnimatedMascot from '@/components/brand/AnimatedMascot'
 
 interface Message {
   id: number

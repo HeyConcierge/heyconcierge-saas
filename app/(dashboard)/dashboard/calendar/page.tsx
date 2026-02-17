@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import LogoSVG from '@/components/LogoSVG'
+import LogoSVG from '@/components/brand/LogoSVG'
 
 // Mock bookings data for presentation
 const MOCK_BOOKINGS = [

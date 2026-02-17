@@ -1,4 +1,4 @@
-import FAQ from '@/components/FAQ';
+import FAQ from '@/components/features/FAQ';
 
 export const metadata = {
   title: 'FAQ - HeyConcierge | Frequently Asked Questions',

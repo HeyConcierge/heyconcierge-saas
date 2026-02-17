@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import LogoSVG from '@/components/LogoSVG'
+import LogoSVG from '@/components/brand/LogoSVG'
 import { supabase } from '@/lib/supabase'
 
 function getCookie(name: string): string | null {

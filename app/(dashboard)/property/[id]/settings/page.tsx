@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import AnimatedMascot from '@/components/AnimatedMascot'
-import { ToastProvider, useToast } from '@/components/Toast'
+import AnimatedMascot from '@/components/brand/AnimatedMascot'
+import { ToastProvider, useToast } from '@/components/ui/Toast'
 import { supabase } from '@/lib/supabase'
 import dynamic from 'next/dynamic'
 
-const TestConcierge = dynamic(() => import('@/components/TestConcierge'), { ssr: false })
+const TestConcierge = dynamic(() => import('@/components/features/TestConcierge'), { ssr: false })
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null

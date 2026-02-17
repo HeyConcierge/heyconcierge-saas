@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import LogoSVG from '@/components/LogoSVG'
+import LogoSVG from '@/components/brand/LogoSVG'
 
 export default function LoginPage() {
   return (

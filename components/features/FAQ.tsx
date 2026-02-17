@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
-import LogoSVG from '@/components/LogoSVG';
+import LogoSVG from '@/components/brand/LogoSVG';
 
 interface FAQItem {
   question: string;

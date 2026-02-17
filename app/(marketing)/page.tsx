@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import MascotSVG from '@/components/MascotSVG'
-import LogoSVG from '@/components/LogoSVG'
+import MascotSVG from '@/components/brand/MascotSVG'
+import LogoSVG from '@/components/brand/LogoSVG'
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null
