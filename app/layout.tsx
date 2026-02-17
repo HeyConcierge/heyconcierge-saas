@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'HeyConcierge — Your Friendly AI Concierge',
-  description: 'A happy little AI concierge that lives in WhatsApp. Answers questions instantly, speaks every language, and knows your property inside out.',
+  description: 'AI-powered guest concierge for vacation rentals. Answers questions instantly via Telegram, WhatsApp, or SMS. Speaks every language and knows your property inside out.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

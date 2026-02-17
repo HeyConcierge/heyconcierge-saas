@@ -311,31 +311,19 @@ function PropertySettingsPage() {
 
     setUploadingImages(true)
     try {
-      for (const file of files) {
-        const fileName = `${propertyId}/${Date.now()}_${file.name}`
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('property-images')
-          .upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: false
-          })
+      const formData = new FormData()
+      formData.append('propertyId', propertyId)
+      formData.append('tags', JSON.stringify(selectedTags))
+      files.forEach(file => formData.append('images', file))
 
-        if (uploadError) throw uploadError
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      })
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('property-images')
-          .getPublicUrl(fileName)
-
-        const { error: dbError } = await supabase
-          .from('property_images')
-          .insert({
-            property_id: propertyId,
-            url: publicUrl,
-            filename: file.name,
-            tags: selectedTags
-          })
-
-        if (dbError) throw dbError
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Upload failed')
       }
 
       toast(`Uploaded ${files.length} image(s)!`, 'success')
@@ -507,9 +495,9 @@ function PropertySettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold mb-1.5 text-dark">Your WhatsApp Number</label>
+              <label className="block text-sm font-bold mb-1.5 text-dark">Your Phone Number</label>
               <input type="text" value={property.whatsapp_number || ''} onChange={(e) => updateProperty({ whatsapp_number: e.target.value })} placeholder="+1234567890" className={inputClass} />
-              <p className="text-xs text-muted mt-1.5">Include country code (e.g., +47 for Norway)</p>
+              <p className="text-xs text-muted mt-1.5">Used for guest messaging (Telegram, WhatsApp, SMS). Include country code.</p>
             </div>
 
             <div>
@@ -766,7 +754,7 @@ function PropertyImagesUpload({ propertyId, images, onUpload, onDelete, uploadin
       const imageFiles = Array.from(e.dataTransfer.files).filter(f =>
         f.type.startsWith('image/')
       )
-      setSelectedFiles(imageFiles)
+      setSelectedFiles(prev => [...prev, ...imageFiles])
     }
   }
 
@@ -775,8 +763,12 @@ function PropertyImagesUpload({ propertyId, images, onUpload, onDelete, uploadin
       const imageFiles = Array.from(e.target.files).filter(f =>
         f.type.startsWith('image/')
       )
-      setSelectedFiles(imageFiles)
+      setSelectedFiles(prev => [...prev, ...imageFiles])
     }
+  }
+
+  const removeSelectedFile = (idx: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== idx))
   }
 
   const toggleTag = (tagId: string) => {
@@ -825,7 +817,10 @@ function PropertyImagesUpload({ propertyId, images, onUpload, onDelete, uploadin
           <p className="text-sm font-bold mb-2">Selected: {selectedFiles.length} file(s)</p>
           <div className="space-y-1">
             {selectedFiles.map((file, idx) => (
-              <p key={idx} className="text-xs text-muted truncate">• {file.name}</p>
+              <div key={idx} className="flex items-center justify-between text-xs text-muted">
+                <span className="truncate">• {file.name}</span>
+                <button type="button" onClick={() => removeSelectedFile(idx)} className="ml-2 text-red-400 hover:text-red-600 shrink-0">✕</button>
+              </div>
             ))}
           </div>
         </div>
@@ -861,23 +856,24 @@ function PropertyImagesUpload({ propertyId, images, onUpload, onDelete, uploadin
 
       {images.length > 0 && (
         <div>
-          <h3 className="text-sm font-bold mb-3 mt-2">Current Images ({images.length})</h3>
+          <h3 className="text-sm font-bold mb-3 mt-2">Current Images ({images.length}/10)</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {images.map((img: any) => (
-              <div key={img.id} className="relative group">
+              <div key={img.id} className="relative">
                 <img src={img.url} alt={img.filename} className="w-full h-32 object-cover rounded-xl" />
-                <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex flex-col items-center justify-center">
-                  <div className="flex flex-wrap gap-1 justify-center mb-2">
-                    {img.tags?.map((tag: string) => (
-                      <span key={tag} className="text-xs bg-white text-dark px-2 py-1 rounded-full">
-                        {availableTags.find(t => t.id === tag)?.emoji} {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <button onClick={() => onDelete(img.id, img.url)} className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold hover:bg-red-600">
-                    Delete
-                  </button>
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {img.tags?.map((tag: string) => (
+                    <span key={tag} className="text-[10px] bg-[rgba(108,92,231,0.1)] text-dark px-1.5 py-0.5 rounded-full">
+                      {availableTags.find(t => t.id === tag)?.emoji} {tag}
+                    </span>
+                  ))}
                 </div>
+                <button
+                  onClick={() => onDelete(img.id, img.url)}
+                  className="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500 text-white rounded-full text-sm font-bold hover:bg-red-600 flex items-center justify-center shadow-md"
+                >
+                  ✕
+                </button>
               </div>
             ))}
           </div>

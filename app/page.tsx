@@ -169,7 +169,7 @@ export default function Home() {
           <div className="animate-slide-up md:text-left text-center">
             <div className="inline-flex items-center gap-2 bg-[rgba(108,92,231,0.15)] border border-[rgba(108,92,231,0.2)] px-4 py-1.5 rounded-full text-[0.85rem] font-semibold text-primary mb-6 hover:bg-[rgba(108,92,231,0.2)] transition-all duration-300 cursor-default shadow-sm hover:shadow-md hover:scale-105" style={{animation: 'glowPulse 4s ease-in-out infinite'}}>
               <span className="w-2 h-2 bg-mint rounded-full animate-pulse-dot shadow-[0_0_8px_rgba(85,239,196,0.8)]" />
-              Now Live — Try it on WhatsApp
+              Now Live — Try it Free
             </div>
             <h1 className="font-nunito text-[3.8rem] max-md:text-[2.5rem] font-black leading-[1.1] mb-5 tracking-tight">
               Your guests&apos;<br />
@@ -177,11 +177,11 @@ export default function Home() {
               <span className="text-primary">friend.</span>
             </h1>
             <p className="text-[1.2rem] text-muted mb-8 max-w-[480px] leading-[1.7] md:mx-0 mx-auto">
-              A happy little AI concierge that lives in WhatsApp. Answers questions instantly, speaks every language, and knows your property inside out.
+              A happy little AI concierge that chats with your guests. Answers questions instantly, speaks every language, and knows your property inside out.
             </p>
             <div className="flex gap-3 flex-wrap mb-10 md:justify-start justify-center">
               <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[0.85rem] font-bold bg-accent-soft text-accent hover:scale-110 hover:-translate-y-1 transition-all duration-300 cursor-default shadow-sm hover:shadow-md">🤖 AI-Powered</span>
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[0.85rem] font-bold bg-[#E8F8F0] text-mint-dark hover:scale-110 hover:-translate-y-1 transition-all duration-300 cursor-default shadow-sm hover:shadow-md">💬 WhatsApp Native</span>
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[0.85rem] font-bold bg-[#E8F8F0] text-mint-dark hover:scale-110 hover:-translate-y-1 transition-all duration-300 cursor-default shadow-sm hover:shadow-md">💬 Telegram · WhatsApp · SMS</span>
               <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[0.85rem] font-bold bg-[#E8E4FF] text-primary hover:scale-110 hover:-translate-y-1 transition-all duration-300 cursor-default shadow-sm hover:shadow-md">🌍 Multilingual</span>
             </div>
             <div className="flex gap-4 items-center md:justify-start justify-center flex-wrap">
@@ -190,7 +190,7 @@ export default function Home() {
                 className="group/btn relative inline-flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-full font-nunito text-[1.05rem] font-extrabold no-underline transition-all shadow-[0_6px_25px_rgba(108,92,231,0.35)] hover:-translate-y-2 hover:shadow-[0_12px_40px_rgba(108,92,231,0.5)] hover:scale-105"
                 style={{animation: 'glowPulse 3s ease-in-out infinite'}}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="group-hover/btn:rotate-12 transition-transform duration-300"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.121.553 4.119 1.52 5.853L.053 23.437a.5.5 0 0 0 .614.614l5.584-1.467A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 0 1-5.332-1.545l-.382-.229-3.318.87.886-3.236-.251-.4A9.93 9.93 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover/btn:rotate-12 transition-transform duration-300"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <span className="group-hover/btn:scale-110 inline-block transition-transform duration-300">Get Started Free</span>
               </Link>
               <a 
@@ -280,12 +280,12 @@ export default function Home() {
         <div className="max-w-[1100px] mx-auto">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[0.85rem] font-bold bg-[#E8E4FF] text-primary mb-4">✨ The Solution</span>
           <h2 className="font-nunito text-[2.6rem] max-md:text-[2rem] font-black leading-[1.15] mb-4 reveal">Meet HeyConcierge!</h2>
-          <p className="text-[1.1rem] text-muted max-w-[600px] mb-12 reveal">A friendly AI that lives in WhatsApp and knows everything about your property. No app downloads. No fuss.</p>
+          <p className="text-[1.1rem] text-muted max-w-[600px] mb-12 reveal">A friendly AI that chats with your guests on Telegram, WhatsApp, or SMS. No app downloads. No fuss.</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="flex flex-col gap-4">
               {[
-                { icon: '💬', bg: 'bg-[#E8F8F0]', title: 'WhatsApp Native', desc: 'Guests just text. No downloads, no logins, no friction.' },
+                { icon: '💬', bg: 'bg-[#E8F8F0]', title: 'Multi-Channel', desc: 'Telegram, WhatsApp, or SMS. Guests just text. No downloads, no friction.' },
                 { icon: '🧠', bg: 'bg-[#E8E4FF]', title: 'Claude AI Brain', desc: 'Smart, safe, nuanced responses — powered by Anthropic.' },
                 { icon: '🌍', bg: 'bg-[#E8F0FF]', title: 'Auto-Multilingual', desc: 'Japanese guest? Japanese reply. Instantly. 50+ languages.' },
                 { icon: '⚙️', bg: 'bg-[#FFF5E8]', title: 'Simple Dashboard', desc: 'Add properties, sync calendars, configure AI. That\'s it.' },
@@ -314,7 +314,7 @@ export default function Home() {
         <div className="max-w-[1100px] mx-auto">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[0.85rem] font-bold bg-[#E8F8F0] text-mint-dark mb-4">🛠 How It Works</span>
           <h2 className="font-nunito text-[2.6rem] max-md:text-[2rem] font-black leading-[1.15] mb-4 reveal">Three steps. Five minutes. Done!</h2>
-          <p className="text-[1.1rem] text-muted max-w-[600px] mb-12 reveal">No developers, no integrations, no PMS required. Just a simple dashboard and a WhatsApp number.</p>
+          <p className="text-[1.1rem] text-muted max-w-[600px] mb-12 reveal">No developers, no integrations, no PMS required. Just a simple dashboard and a QR code.</p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
             {[

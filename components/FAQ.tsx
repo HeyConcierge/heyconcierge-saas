@@ -15,12 +15,12 @@ const faqData: FAQItem[] = [
   {
     category: 'General',
     question: 'What is HeyConcierge?',
-    answer: 'HeyConcierge is an AI-powered guest communication platform for vacation rental hosts. It handles guest messages 24/7 via WhatsApp, provides instant answers to common questions, and sends automated check-in instructions with personalized arrival details.',
+    answer: 'HeyConcierge is an AI-powered guest communication platform for vacation rental hosts. It handles guest messages 24/7 via Telegram, WhatsApp, or SMS — providing instant answers to common questions and sending automated check-in instructions with personalized arrival details.',
   },
   {
     category: 'General',
     question: 'How does it work?',
-    answer: '1. Connect your property calendar (Airbnb, VRBO, or any iCal feed)\n2. Add your WhatsApp number to your listing\n3. HeyConcierge automatically sends guests their check-in details and answers questions\n4. You stay in control — review conversations and intervene anytime',
+    answer: '1. Connect your property calendar (Airbnb, VRBO, or any iCal feed)\n2. Place the QR code in your property or send it in booking confirmations\n3. Guests scan and chat — HeyConcierge answers questions and sends check-in details automatically\n4. You stay in control — review conversations and intervene anytime',
   },
   {
     category: 'General',
@@ -50,12 +50,12 @@ const faqData: FAQItem[] = [
   {
     category: 'Setup',
     question: 'How long does setup take?',
-    answer: 'Less than 5 minutes:\n1. Paste your calendar link\n2. Add your property details\n3. Set your WhatsApp number\n4. Done!',
+    answer: 'Less than 5 minutes:\n1. Paste your calendar link\n2. Add your property details\n3. Print the QR code for your property\n4. Done!',
   },
   {
     category: 'Setup',
-    question: 'Do I need a separate WhatsApp number?',
-    answer: 'We recommend using a dedicated business WhatsApp number, but you can use your personal number if preferred. WhatsApp Business API is not required.',
+    question: 'Which messaging channels are supported?',
+    answer: 'HeyConcierge currently supports Telegram (via bot), with WhatsApp and SMS coming soon. Guests simply scan a QR code to start chatting — no app downloads or signups required.',
   },
   {
     category: 'Features',

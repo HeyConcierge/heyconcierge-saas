@@ -162,7 +162,7 @@ export default function PropertyViewPage() {
           <div className="bg-white rounded-2xl shadow-card p-6">
             <div className="text-4xl mb-2">{property.whatsapp_number ? '✅' : '⚠️'}</div>
             <div className="text-xl font-black">{property.whatsapp_number ? 'Active' : 'Setup Required'}</div>
-            <div className="text-sm text-muted">WhatsApp Status</div>
+            <div className="text-sm text-muted">Messaging Status</div>
           </div>
         </div>
 
@@ -173,7 +173,7 @@ export default function PropertyViewPage() {
           {messages.length === 0 ? (
             <div className="text-center py-12 text-muted">
               <div className="text-6xl mb-4">💬</div>
-              <p>No messages yet. Start testing by sending a WhatsApp!</p>
+              <p>No messages yet. Share the QR code and start chatting!</p>
             </div>
           ) : (
             <div className="space-y-4">

@@ -106,7 +106,7 @@ export default function SignupPage() {
             property_type: form.propertyType,
             images: form.propertyImages,
             ical_url: form.icalUrl || null,
-            whatsapp_number: '+14155238886' // Twilio WhatsApp sandbox number
+            whatsapp_number: '' // Configured later in settings
           })
           .select()
           .single()
