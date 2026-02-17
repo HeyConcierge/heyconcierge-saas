@@ -162,13 +162,13 @@ export async function POST(request: NextRequest) {
     }
 
     // --- Regular message: resolve session ---
-    const { data: session } = await supabase
+    const { data: session, error: sessionErr } = await supabase
       .from('guest_sessions')
       .select('property_id')
       .eq('telegram_chat_id', chatId)
       .single()
 
-    if (!session) {
+    if (sessionErr || !session) {
       await sendMessage(chatId, "I don't know which property you're at. Please scan the QR code at your property to connect.")
       return NextResponse.json({ ok: true })
     }
@@ -180,14 +180,14 @@ export async function POST(request: NextRequest) {
       .eq('telegram_chat_id', chatId)
 
     // Load property + config
-    const { data: property } = await supabase
+    const { data: property, error: propErr } = await supabase
       .from('properties')
       .select('*, property_config_sheets(*)')
       .eq('id', session.property_id)
       .single()
 
-    if (!property) {
-      await sendMessage(chatId, "Something went wrong loading your property. Please try scanning the QR code again.")
+    if (propErr || !property) {
+      await sendMessage(chatId, `Error loading property: ${propErr?.message || 'not found'}`)
       return NextResponse.json({ ok: true })
     }
 
@@ -198,19 +198,7 @@ export async function POST(request: NextRequest) {
 
     // Check if config is populated
     if (!config.wifi_password && !config.checkin_instructions && !config.local_tips && !config.house_rules) {
-      await sendMessage(chatId, `Hi ${firstName}! The host for *${property.name}* hasn't set up the concierge information yet. Please contact your host directly for check-in details.`)
-      return NextResponse.json({ ok: true })
-    }
-
-    // Rate limiting: max 30 messages per minute
-    const { count } = await supabase
-      .from('goconcierge_messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('guest_phone', `tg:${chatId}`)
-      .gte('created_at', new Date(Date.now() - 60000).toISOString())
-
-    if ((count || 0) >= 30) {
-      await sendMessage(chatId, "You're sending messages too quickly. Please wait a moment.")
+      await sendMessage(chatId, `Hi ${firstName}! The host for ${property.name} hasn't set up the concierge information yet. Please contact your host directly for check-in details.`)
       return NextResponse.json({ ok: true })
     }
 
@@ -224,13 +212,13 @@ export async function POST(request: NextRequest) {
       .limit(10)
 
     // Build Claude messages with history
-    const messages: { role: 'user' | 'assistant'; content: string }[] = []
+    const claudeMessages: { role: 'user' | 'assistant'; content: string }[] = []
     for (const h of (history || []).reverse()) {
       if (h.role === 'user' || h.role === 'assistant') {
-        messages.push({ role: h.role, content: h.content })
+        claudeMessages.push({ role: h.role, content: h.content })
       }
     }
-    messages.push({ role: 'user', content: text })
+    claudeMessages.push({ role: 'user', content: text })
 
     // Build context and call Claude
     const propertyContext = buildPropertyContext(property, config)
@@ -267,20 +255,25 @@ ${propertyContext}`
 
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
-      await sendMessage(chatId, "I'm having trouble right now. Please try again later.")
-      console.error('ANTHROPIC_API_KEY not configured')
+      await sendMessage(chatId, "ANTHROPIC_API_KEY not configured on server.")
       return NextResponse.json({ ok: true })
     }
 
-    const anthropic = new Anthropic({ apiKey })
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages,
-    })
-
-    const reply = response.content[0].type === 'text' ? response.content[0].text : ''
+    let reply: string
+    try {
+      const anthropic = new Anthropic({ apiKey })
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: claudeMessages,
+      })
+      reply = response.content[0].type === 'text' ? response.content[0].text : ''
+    } catch (aiErr) {
+      const msg = aiErr instanceof Error ? aiErr.message : String(aiErr)
+      await sendMessage(chatId, `AI error: ${msg}`)
+      return NextResponse.json({ ok: true })
+    }
 
     // Send reply
     await sendMessage(chatId, reply)
@@ -289,24 +282,28 @@ ${propertyContext}`
     await autoAttachImages(chatId, text, reply, property.id)
 
     // Log conversation (user message + assistant reply as separate rows)
-    await supabase.from('goconcierge_messages').insert([
-      {
-        property_id: property.id,
-        guest_phone: `tg:${chatId}`,
-        guest_name: firstName,
-        role: 'user',
-        content: text,
-        channel: 'telegram',
-      },
-      {
-        property_id: property.id,
-        guest_phone: `tg:${chatId}`,
-        guest_name: firstName,
-        role: 'assistant',
-        content: reply,
-        channel: 'telegram',
-      },
-    ])
+    try {
+      await supabase.from('goconcierge_messages').insert([
+        {
+          property_id: property.id,
+          guest_phone: `tg:${chatId}`,
+          guest_name: firstName,
+          role: 'user',
+          content: text,
+          channel: 'telegram',
+        },
+        {
+          property_id: property.id,
+          guest_phone: `tg:${chatId}`,
+          guest_name: firstName,
+          role: 'assistant',
+          content: reply,
+          channel: 'telegram',
+        },
+      ])
+    } catch (logErr) {
+      console.error('Failed to log conversation:', logErr)
+    }
 
     return NextResponse.json({ ok: true })
   } catch (error) {
