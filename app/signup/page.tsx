@@ -124,9 +124,10 @@ export default function SignupPage() {
             house_rules: form.houseRules,
           })
 
-        // Generate QR code
+        // Generate QR code — Telegram deep link with property ID
         const QRCode = (await import('qrcode')).default
-        const qrUrl = `https://wa.me/+4712345678?text=Hi!+I'm+at+${encodeURIComponent(form.propertyName)}`
+        const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'HeyConciergeBot'
+        const qrUrl = `https://t.me/${botUsername}?start=${prop.id}`
         const dataUrl = await QRCode.toDataURL(qrUrl, { width: 300, margin: 2, color: { dark: '#2D2B55', light: '#FFFFFF' } })
         setQrDataUrl(dataUrl)
       } catch (err) {
@@ -321,7 +322,7 @@ export default function SignupPage() {
           <div className="animate-slide-up text-center">
             <div className="text-6xl mb-4">🎉</div>
             <h2 className="font-nunito text-3xl font-black mb-2">You&apos;re all set!</h2>
-            <p className="text-muted mb-8">Your AI concierge is ready. Place this QR code in your property — guests scan it to start chatting.</p>
+            <p className="text-muted mb-8">Your AI concierge is ready. Place this QR code in your property — guests scan it to open Telegram and start chatting.</p>
             {qrDataUrl && (
               <div className="inline-block bg-white rounded-3xl p-8 shadow-card mb-8">
                 <img src={qrDataUrl} alt="QR Code" className="w-[250px] h-[250px] mx-auto" />
