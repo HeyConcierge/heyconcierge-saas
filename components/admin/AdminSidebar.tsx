@@ -40,7 +40,7 @@ export default function AdminSidebar({ user }: Props) {
 
   async function handleLogout() {
     await fetch('/api/admin/auth/logout', { method: 'POST' })
-    router.push('/admin/login')
+    window.location.href = '/admin/login'
   }
 
   function isActive(href: string, exact?: boolean) {
