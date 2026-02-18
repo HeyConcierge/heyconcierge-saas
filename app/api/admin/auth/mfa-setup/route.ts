@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateSecret, verifySync, generateURI } from 'otplib'
 import QRCode from 'qrcode'
 import { getAdminSession, getAdminSupabase } from '@/lib/admin-auth'
+import { generateSecret, generateURI, verifyTOTP } from '@/lib/totp'
 
 export async function GET() {
   try {
@@ -12,14 +12,9 @@ export async function GET() {
 
     const secret = generateSecret()
     const adminUser = session.admin_users as { email: string; name: string }
-
-    const uri = generateURI({
-      issuer: 'HeyConcierge Admin',
-      label: adminUser.email,
-      secret,
-    })
-
+    const uri = generateURI('HeyConcierge Admin', adminUser.email, secret)
     const qrCode = await QRCode.toDataURL(uri)
+
     return NextResponse.json({ qrCode, secret })
   } catch (err) {
     console.error('MFA setup GET error:', err)
@@ -41,17 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Code and secret are required' }, { status: 400 })
     }
 
-    // verifySync returns { valid: boolean } — wrap in try/catch in case of bad input
-    let isValid = false
-    try {
-      const result = verifySync({ token: String(code), secret: String(secret) })
-      isValid = result.valid
-    } catch (verifyErr) {
-      console.error('TOTP verify error:', verifyErr)
-      return NextResponse.json({ error: 'Invalid code format' }, { status: 400 })
-    }
-
-    if (!isValid) {
+    if (!verifyTOTP(String(code), String(secret))) {
       return NextResponse.json({ error: 'Invalid code. Please try again.' }, { status: 400 })
     }
 

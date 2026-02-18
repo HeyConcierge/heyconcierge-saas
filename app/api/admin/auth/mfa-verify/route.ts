@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifySync } from 'otplib'
 import { getAdminSession, getAdminSupabase } from '@/lib/admin-auth'
+import { verifyTOTP } from '@/lib/totp'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,17 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'MFA not configured' }, { status: 400 })
     }
 
-    // verifySync returns { valid: boolean } — wrap in try/catch for safety
-    let isValid = false
-    try {
-      const result = verifySync({ token: String(code), secret: adminUser.mfa_secret })
-      isValid = result.valid
-    } catch (verifyErr) {
-      console.error('TOTP verify error:', verifyErr)
-      return NextResponse.json({ error: 'Invalid code format' }, { status: 400 })
-    }
-
-    if (!isValid) {
+    if (!verifyTOTP(String(code), adminUser.mfa_secret)) {
       return NextResponse.json({ error: 'Invalid code. Please try again.' }, { status: 400 })
     }
 
