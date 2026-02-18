@@ -1,12 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['pdf-parse', 'otplib', 'qrcode'],
+    serverComponentsExternalPackages: ['pdf-parse'],
   },
   webpack: (config, { isServer }) => {
     if (isServer) {
-      // Don't bundle these — let Node.js require them at runtime
-      config.externals = [...(Array.isArray(config.externals) ? config.externals : []), 'pdf-parse', 'otplib', 'qrcode']
+      // pdf-parse has native bindings — keep it external so Node.js loads it at runtime
+      // otplib and qrcode are pure JS — let webpack bundle them normally
+      config.externals = [...(Array.isArray(config.externals) ? config.externals : []), 'pdf-parse']
     }
     if (!isServer) {
       config.resolve.fallback = {
