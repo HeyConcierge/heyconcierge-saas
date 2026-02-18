@@ -22,7 +22,9 @@ export async function GET() {
       .order('created_at', { ascending: false })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ users: data })
+
+    const currentUser = session.admin_users as { id: string; role: string }
+    return NextResponse.json({ users: data, currentUser })
   } catch (err) {
     console.error('GET /api/admin/users error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

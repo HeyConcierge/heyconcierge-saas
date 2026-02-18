@@ -31,6 +31,7 @@ const roleLabels: Record<string, string> = {
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
+  const [currentUserRole, setCurrentUserRole] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -54,8 +55,12 @@ export default function AdminUsersPage() {
     setLoading(true)
     const res = await fetch('/api/admin/users')
     const data = await res.json()
-    if (res.ok) setUsers(data.users ?? [])
-    else setError(data.error ?? 'Failed to load users')
+    if (res.ok) {
+      setUsers(data.users ?? [])
+      setCurrentUserRole(data.currentUser?.role ?? '')
+    } else {
+      setError(data.error ?? 'Failed to load users')
+    }
     setLoading(false)
   }, [])
 
@@ -263,31 +268,37 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center justify-end gap-2">
-                      {/* Edit role */}
-                      <button
-                        onClick={() => { setEditTarget(user); setEditRole(user.role as Role) }}
-                        className="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition"
-                      >
-                        Edit
-                      </button>
-                      {/* Freeze / Unfreeze */}
-                      <button
-                        onClick={() => handleFreeze(user)}
-                        className={`text-xs px-3 py-1.5 rounded-lg transition ${
-                          user.frozen
-                            ? 'text-emerald-400 hover:text-emerald-300 bg-emerald-950 hover:bg-emerald-900 border border-emerald-800'
-                            : 'text-amber-400 hover:text-amber-300 bg-amber-950 hover:bg-amber-900 border border-amber-800'
-                        }`}
-                      >
-                        {user.frozen ? 'Unfreeze' : 'Freeze'}
-                      </button>
-                      {/* Delete */}
-                      <button
-                        onClick={() => setDeleteTarget(user)}
-                        className="text-xs text-red-400 hover:text-red-300 bg-red-950 hover:bg-red-900 border border-red-800 px-3 py-1.5 rounded-lg transition"
-                      >
-                        Delete
-                      </button>
+                      {/* Super admins are view-only for non-super-admins */}
+                      {user.role === 'super_admin' && currentUserRole !== 'super_admin' ? (
+                        <span className="text-xs text-slate-600 italic">View only</span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => { setEditTarget(user); setEditRole(user.role as Role) }}
+                            className="text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleFreeze(user)}
+                            className={`text-xs px-3 py-1.5 rounded-lg transition ${
+                              user.frozen
+                                ? 'text-emerald-400 hover:text-emerald-300 bg-emerald-950 hover:bg-emerald-900 border border-emerald-800'
+                                : 'text-amber-400 hover:text-amber-300 bg-amber-950 hover:bg-amber-900 border border-amber-800'
+                            }`}
+                          >
+                            {user.frozen ? 'Unfreeze' : 'Freeze'}
+                          </button>
+                          {currentUserRole === 'super_admin' && (
+                            <button
+                              onClick={() => setDeleteTarget(user)}
+                              className="text-xs text-red-400 hover:text-red-300 bg-red-950 hover:bg-red-900 border border-red-800 px-3 py-1.5 rounded-lg transition"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

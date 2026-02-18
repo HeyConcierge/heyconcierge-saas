@@ -3,6 +3,12 @@ import { requireAdminSession, getAdminSupabase } from '@/lib/admin-auth'
 
 const ROLES = ['super_admin', 'admin', 'support', 'finance']
 
+async function getTargetUser(id: string) {
+  const supabase = getAdminSupabase()
+  const { data } = await supabase.from('admin_users').select('id, role').eq('id', id).single()
+  return data
+}
+
 // PATCH — update role or frozen state
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -12,6 +18,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const adminUser = session.admin_users as { id: string; role: string }
     if (!['super_admin', 'admin'].includes(adminUser.role)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
+    // Admins cannot modify super_admin users — view only
+    const target = await getTargetUser(params.id)
+    if (target?.role === 'super_admin' && adminUser.role !== 'super_admin') {
+      return NextResponse.json({ error: 'Admins cannot modify super admin accounts' }, { status: 403 })
     }
 
     const body = await request.json()
