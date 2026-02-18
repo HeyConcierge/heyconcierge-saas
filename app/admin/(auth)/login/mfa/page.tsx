@@ -28,7 +28,7 @@ export default function MfaPage() {
         return
       }
 
-      router.push('/admin')
+      window.location.href = '/admin'
     } catch {
       setError('Network error. Please try again.')
     } finally {

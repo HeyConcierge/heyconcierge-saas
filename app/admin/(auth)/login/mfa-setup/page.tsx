@@ -51,7 +51,7 @@ export default function MfaSetupPage() {
         return
       }
 
-      router.push('/admin')
+      window.location.href = '/admin'
     } catch (err) {
       console.error('MFA setup error:', err)
       setError('Network error. Please try again.')

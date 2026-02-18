@@ -34,7 +34,8 @@ export default function AdminLoginPage() {
       } else if (data.mfa_setup_required) {
         router.push('/admin/login/mfa-setup')
       } else {
-        router.push('/admin')
+        // Hard navigate to bust Next.js RSC cache — ensures correct user loads
+        window.location.href = '/admin'
       }
     } catch {
       setError('Network error. Please try again.')
