@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import CookieBanner from '@/components/ui/CookieBanner'
 
 export const metadata: Metadata = {
   title: 'HeyConcierge — Your Friendly AI Concierge',
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-quicksand">
         {children}
+        <CookieBanner />
       </body>
     </html>
   )
