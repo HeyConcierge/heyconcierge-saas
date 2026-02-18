@@ -16,12 +16,17 @@ HeyConcierge is an AI-powered guest concierge platform that enables property hos
 
 HeyConcierge is operated by:
 
-**HeyConcierge**
-[PLACEHOLDER: Full legal company name]
-[PLACEHOLDER: Street address]
+**HeyConcierge AS**
+[REGISTRERT ADRESSE KOMMER]
 Tromsø, Norway
-Organisation number: [PLACEHOLDER: Norwegian organisation number]
-Email: legal@heyconcierge.io
+Organisation number: [VENTER PÅ BRØNNØYSUND]
+Email: hello@heyconcierge.io
+
+---
+
+## 1A. Business-to-Business Service
+
+**HeyConcierge is a business-to-business (B2B) service.** The Service is offered exclusively to businesses, sole traders, and professionals acting in the course of their trade, business, craft, or profession ("Hosts"). HeyConcierge does not offer services to consumers within the meaning of Directive 2011/83/EU or the Norwegian Consumer Purchases Act (*Forbrukerkjøpsloven*). By registering for an Account, you confirm that you are acting in a professional or commercial capacity and not as a consumer. Consequently, EU and Norwegian consumer protection legislation — including but not limited to the right of withdrawal, unfair contract terms provisions applicable to consumer contracts, and the Consumer Rights Directive — do not apply to these Terms or to the Service.
 
 ---
 
@@ -114,13 +119,13 @@ From time to time, we may offer beta or experimental features. These are provide
 
 ### 6.1 Subscription Plans
 
-Access to the full Service requires a paid Subscription. Subscription plans and their features and pricing are described at [PLACEHOLDER: URL to pricing page]. HeyConcierge reserves the right to change pricing with **30 days' notice** to existing subscribers.
+Access to the full Service requires a paid Subscription. Subscription plans and their features and pricing are described at https://heyconcierge.io/pricing. HeyConcierge reserves the right to change pricing with **30 days' notice** to existing subscribers.
 
 ### 6.2 Free Trial
 
 New Hosts are entitled to a **14-day free trial** of the Service, commencing on the date of account registration.
 
-- No payment method is required to begin the trial [PLACEHOLDER: or — A valid payment method must be provided to begin the trial].
+- No payment method is required to begin the trial.
 - At the end of the 14-day trial period, your account will **automatically convert to a paid Subscription** on the plan you selected unless you cancel before the trial ends.
 - You may cancel at any time during the trial period via your Account dashboard or by contacting support@heyconcierge.io.
 
@@ -230,7 +235,7 @@ We may carry out planned maintenance that temporarily affects service availabili
 
 ### 9.3 Support
 
-HeyConcierge provides customer support via email at support@heyconcierge.io [PLACEHOLDER: and/or via in-app chat]. Response times are [PLACEHOLDER: within 2 business days for standard support; faster for critical issues]. Support is provided in English [PLACEHOLDER: and Norwegian].
+HeyConcierge provides customer support via email at support@heyconcierge.io. Response times are within 2 business days for standard support. Support is provided in English and Norwegian.
 
 ### 9.4 Security
 
@@ -384,9 +389,9 @@ Any dispute arising out of or in connection with these Terms shall be submitted 
 
 Before initiating formal proceedings, both Parties agree to attempt to resolve disputes informally by contacting legal@heyconcierge.io and allowing 30 days for good-faith negotiations.
 
-### 19.4 EU Consumers
+### 19.4 EU Online Dispute Resolution
 
-If you are a consumer in the EU, you may also use the EU Online Dispute Resolution platform: [https://ec.europa.eu/consumers/odr](https://ec.europa.eu/consumers/odr).
+As HeyConcierge is a B2B service (see Clause 1A), the EU Online Dispute Resolution platform for consumer disputes does not apply. If you nonetheless believe it may be relevant: [https://ec.europa.eu/consumers/odr](https://ec.europa.eu/consumers/odr).
 
 ---
 
@@ -422,9 +427,9 @@ These Terms are written in English. In the event of any conflict between an Engl
 
 For legal enquiries relating to these Terms:
 
-**HeyConcierge Legal**
-Email: **legal@heyconcierge.io**
-[PLACEHOLDER: Postal address]
+**HeyConcierge AS**
+Email: **hello@heyconcierge.io**
+[REGISTRERT ADRESSE KOMMER]
 Tromsø, Norway
 
 For general support: **support@heyconcierge.io**
