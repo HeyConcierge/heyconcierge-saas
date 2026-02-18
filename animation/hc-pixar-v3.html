@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeyConcierge — Pixar Intro v3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;700;800&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #080818;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .scene {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    background: radial-gradient(ellipse at 50% 55%, #111133 0%, #080818 75%);
+    overflow: hidden;
+  }
+
+  /* ===== FLOOR LINE ===== */
+  .floor {
+    position: absolute;
+    bottom: 380px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(108, 92, 231, 0.08);
+  }
+
+  /* ===== WORD — already visible from start ===== */
+  .word-container {
+    position: absolute;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    z-index: 2;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 390px;
+  }
+
+  .letter {
+    font-family: 'Poppins', sans-serif;
+    font-size: 92px;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+    display: inline-block;
+  }
+  .hey { color: #6C5CE7; }
+
+  /* O placeholder — visible at start, fades when mascot arrives */
+  .l-O {
+    color: rgba(108, 92, 231, 0.5);
+    transition: opacity 0.3s;
+    animation: o-fade 8s forwards;
+  }
+  @keyframes o-fade {
+    0%, 72% { opacity: 1; }
+    78% { opacity: 0; }
+    100% { opacity: 0; }
+  }
+
+  /* Letters react to mascot bouncing on them */
+  .letter-react {
+    transform-origin: bottom center;
+  }
+  /* H gets bumped at ~25% */
+  .l-H { animation: bump-letter 8s forwards; }
+  @keyframes bump-letter {
+    0%, 23% { transform: rotate(0); }
+    25% { transform: rotate(-4deg); }
+    27% { transform: rotate(1deg); }
+    29%, 100% { transform: rotate(0); }
+  }
+  /* y gets bumped at ~38% */
+  .l-y { animation: bump-y 8s forwards; }
+  @keyframes bump-y {
+    0%, 36% { transform: rotate(0); }
+    38% { transform: rotate(5deg); }
+    40% { transform: rotate(-1deg); }
+    42%, 100% { transform: rotate(0); }
+  }
+  /* e3 gets bumped at ~55% */
+  .l-e3 { animation: bump-e3 8s forwards; }
+  @keyframes bump-e3 {
+    0%, 53% { transform: rotate(0); }
+    55% { transform: rotate(4deg); }
+    57% { transform: rotate(-1deg); }
+    59%, 100% { transform: rotate(0); }
+  }
+
+  /* ===== MASCOT — the star ===== */
+  .mascot {
+    position: absolute;
+    z-index: 20;
+    width: 90px;
+    height: 90px;
+    /* Start off-screen left */
+    animation: mascot-journey 8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+
+  /* The full journey: enter left → bounce across letters → land in O */
+  @keyframes mascot-journey {
+    /* Enter from left, rolling in */
+    0% {
+      left: -100px;
+      bottom: 390px;
+      transform: rotate(-30deg) scaleY(1) scaleX(1);
+    }
+    /* Roll onto scene floor */
+    5% {
+      left: 80px;
+      bottom: 390px;
+      transform: rotate(15deg) scaleY(1) scaleX(1);
+    }
+    /* Squat to prepare jump */
+    10% {
+      left: 130px;
+      bottom: 385px;
+      transform: rotate(0) scaleY(0.7) scaleX(1.3);
+    }
+    /* BIG JUMP UP — arc over to H area */
+    15% {
+      left: 200px;
+      bottom: 620px;
+      transform: rotate(15deg) scaleY(1.25) scaleX(0.82);
+    }
+    /* Come down, stretch */
+    20% {
+      left: 270px;
+      bottom: 500px;
+      transform: rotate(25deg) scaleY(1.3) scaleX(0.75);
+    }
+    /* LAND on top of H — squash */
+    24% {
+      left: 275px;
+      bottom: 495px;
+      transform: rotate(0) scaleY(0.55) scaleX(1.45);
+    }
+    /* Bounce off H */
+    28% {
+      left: 320px;
+      bottom: 650px;
+      transform: rotate(-10deg) scaleY(1.2) scaleX(0.85);
+    }
+    /* Falling toward y */
+    34% {
+      left: 400px;
+      bottom: 520px;
+      transform: rotate(20deg) scaleY(1.3) scaleX(0.78);
+    }
+    /* Land on y — squash */
+    37% {
+      left: 410px;
+      bottom: 490px;
+      transform: rotate(0) scaleY(0.5) scaleX(1.5);
+    }
+    /* Bounce off y — smaller arc */
+    42% {
+      left: 480px;
+      bottom: 600px;
+      transform: rotate(-15deg) scaleY(1.15) scaleX(0.9);
+    }
+    /* Arc over toward the right side */
+    48% {
+      left: 620px;
+      bottom: 650px;
+      transform: rotate(10deg) scaleY(1.1) scaleX(0.92);
+    }
+    /* Come down toward e (last letter) */
+    52% {
+      left: 730px;
+      bottom: 520px;
+      transform: rotate(25deg) scaleY(1.3) scaleX(0.75);
+    }
+    /* Land on e3 — squash */
+    55% {
+      left: 740px;
+      bottom: 495px;
+      transform: rotate(0) scaleY(0.55) scaleX(1.4);
+    }
+    /* Bounce back LEFT toward O position */
+    60% {
+      left: 680px;
+      bottom: 620px;
+      transform: rotate(-20deg) scaleY(1.2) scaleX(0.85);
+    }
+    /* Arc back */
+    66% {
+      left: 560px;
+      bottom: 660px;
+      transform: rotate(-10deg) scaleY(1.1) scaleX(0.92);
+    }
+    /* Coming down toward O */
+    72% {
+      left: 480px;
+      bottom: 520px;
+      transform: rotate(15deg) scaleY(1.35) scaleX(0.72);
+    }
+    /* SLAM into O position — big squash */
+    76% {
+      left: 432px;
+      bottom: 388px;
+      transform: rotate(0) scaleY(0.45) scaleX(1.55);
+    }
+    /* Spring up slightly */
+    80% {
+      left: 432px;
+      bottom: 420px;
+      transform: rotate(0) scaleY(1.15) scaleX(0.9);
+    }
+    /* Settle back */
+    84% {
+      left: 432px;
+      bottom: 395px;
+      transform: rotate(0) scaleY(0.9) scaleX(1.06);
+    }
+    /* Micro bounce */
+    87% {
+      left: 432px;
+      bottom: 402px;
+      transform: rotate(0) scaleY(1.04) scaleX(0.98);
+    }
+    /* Settled */
+    90% {
+      left: 432px;
+      bottom: 398px;
+      transform: rotate(0) scaleY(1) scaleX(1);
+    }
+    /* Happy wiggle */
+    93% {
+      left: 432px;
+      bottom: 398px;
+      transform: rotate(-4deg) scaleY(1) scaleX(1);
+    }
+    95% {
+      left: 432px;
+      bottom: 398px;
+      transform: rotate(4deg) scaleY(1) scaleX(1);
+    }
+    97% {
+      left: 432px;
+      bottom: 398px;
+      transform: rotate(-1deg) scaleY(1) scaleX(1);
+    }
+    100% {
+      left: 432px;
+      bottom: 398px;
+      transform: rotate(0) scaleY(1) scaleX(1);
+    }
+  }
+
+  .mascot-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 6px 20px rgba(108, 92, 231, 0.5));
+  }
+
+  /* Eyes track movement direction during journey, then look around after */
+  .eye-group {
+    animation: eyes-journey 8s forwards;
+  }
+  @keyframes eyes-journey {
+    0%, 10% { transform: translateX(2px) translateY(1px); } /* looking right */
+    24%, 26% { transform: translateY(3px); } /* looking down on impact */
+    28%, 34% { transform: translateX(2px); } /* looking right */
+    37%, 39% { transform: translateY(3px); } /* impact */
+    42%, 52% { transform: translateX(2px); } /* looking right */
+    55%, 57% { transform: translateY(3px); } /* impact */
+    60%, 72% { transform: translateX(-2px); } /* looking LEFT (going back) */
+    76%, 80% { transform: translateY(2px); } /* settle */
+    85% { transform: translateX(0) translateY(0); } /* center */
+    90% { transform: translateX(-3px); } /* look left */
+    94% { transform: translateX(3px); } /* look right */
+    97%, 100% { transform: translateX(0) translateY(0); } /* center, content */
+  }
+
+  /* Blink */
+  .eye-lid {
+    fill: #6C5CE7;
+    opacity: 0;
+    animation: blink-seq 8s forwards;
+  }
+  @keyframes blink-seq {
+    0%, 88% { opacity: 0; }
+    89% { opacity: 1; }
+    91% { opacity: 0; }
+    95% { opacity: 0; }
+    96% { opacity: 1; }
+    97.5% { opacity: 0; }
+    100% { opacity: 0; }
+  }
+
+  /* Mouth: surprised during bouncing, happy after settling */
+  .mouth-o {
+    animation: mouth-surprise 8s forwards;
+  }
+  @keyframes mouth-surprise {
+    0%, 85% { opacity: 1; }
+    88%, 100% { opacity: 0; }
+  }
+  .mouth-smile {
+    opacity: 0;
+    animation: mouth-happy 8s forwards;
+  }
+  @keyframes mouth-happy {
+    0%, 85% { opacity: 0; }
+    88%, 100% { opacity: 1; }
+  }
+
+  /* Cheeks appear after settling */
+  .cheek {
+    animation: cheek-appear 8s forwards;
+  }
+  @keyframes cheek-appear {
+    0%, 85% { opacity: 0.15; }
+    90%, 100% { opacity: 0.55; }
+  }
+
+  /* ===== SHADOWS ===== */
+  .bounce-shadow {
+    position: absolute;
+    width: 60px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    z-index: 1;
+    animation: shadow-journey 8s forwards;
+  }
+  @keyframes shadow-journey {
+    0% { left: -100px; bottom: 383px; opacity: 0; transform: scale(0.5); }
+    5% { left: 95px; bottom: 383px; opacity: 0.5; transform: scale(1); }
+    10% { left: 145px; bottom: 383px; opacity: 0.7; transform: scale(1.3); }
+    15% { left: 215px; bottom: 383px; opacity: 0.15; transform: scale(0.4); }
+    24% { left: 290px; bottom: 383px; opacity: 0.7; transform: scale(1.4); }
+    28% { left: 335px; bottom: 383px; opacity: 0.1; transform: scale(0.3); }
+    37% { left: 425px; bottom: 383px; opacity: 0.7; transform: scale(1.4); }
+    42% { left: 495px; bottom: 383px; opacity: 0.1; transform: scale(0.3); }
+    55% { left: 755px; bottom: 383px; opacity: 0.7; transform: scale(1.4); }
+    60% { left: 695px; bottom: 383px; opacity: 0.1; transform: scale(0.3); }
+    76% { left: 447px; bottom: 383px; opacity: 0.8; transform: scale(1.5); }
+    90%, 100% { left: 447px; bottom: 383px; opacity: 0.5; transform: scale(1); }
+  }
+
+  /* ===== IMPACT PARTICLES at each bounce ===== */
+  .impact-set {
+    position: absolute;
+    z-index: 15;
+  }
+  .imp-dot {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: #6C5CE7;
+    border-radius: 50%;
+    opacity: 0;
+  }
+
+  /* Impact on H */
+  .imp-h { animation: imp-h-burst 8s forwards; }
+  .imp-h .d1 { animation: dot-fly-ul 8s forwards; left: 285px; bottom: 495px; }
+  .imp-h .d2 { animation: dot-fly-ur 8s forwards; left: 305px; bottom: 500px; }
+  .imp-h .d3 { animation: dot-fly-dl 8s forwards; left: 280px; bottom: 490px; background: white; width: 3px; height: 3px; }
+  
+  @keyframes dot-fly-ul {
+    0%, 23% { opacity: 0; transform: translate(0,0); }
+    24% { opacity: 1; }
+    30% { opacity: 0; transform: translate(-25px, -40px); }
+    100% { opacity: 0; }
+  }
+  @keyframes dot-fly-ur {
+    0%, 23% { opacity: 0; transform: translate(0,0); }
+    24% { opacity: 1; }
+    30% { opacity: 0; transform: translate(20px, -35px); }
+    100% { opacity: 0; }
+  }
+  @keyframes dot-fly-dl {
+    0%, 23% { opacity: 0; transform: translate(0,0); }
+    24% { opacity: 1; }
+    30% { opacity: 0; transform: translate(-15px, 20px); }
+    100% { opacity: 0; }
+  }
+
+  /* Impact on y */
+  .imp-y .d1 { animation: dot-fly-y1 8s forwards; left: 420px; bottom: 490px; }
+  .imp-y .d2 { animation: dot-fly-y2 8s forwards; left: 440px; bottom: 495px; }
+  @keyframes dot-fly-y1 {
+    0%, 36% { opacity: 0; transform: translate(0,0); }
+    37% { opacity: 1; }
+    43% { opacity: 0; transform: translate(-20px, -35px); }
+    100% { opacity: 0; }
+  }
+  @keyframes dot-fly-y2 {
+    0%, 36% { opacity: 0; transform: translate(0,0); }
+    37% { opacity: 1; }
+    43% { opacity: 0; transform: translate(25px, -30px); }
+    100% { opacity: 0; }
+  }
+
+  /* Impact on e3 */
+  .imp-e .d1 { animation: dot-fly-e1 8s forwards; left: 750px; bottom: 495px; }
+  .imp-e .d2 { animation: dot-fly-e2 8s forwards; left: 770px; bottom: 490px; background: white; width: 3px; height: 3px; }
+  @keyframes dot-fly-e1 {
+    0%, 54% { opacity: 0; transform: translate(0,0); }
+    55% { opacity: 1; }
+    61% { opacity: 0; transform: translate(-20px, -40px); }
+    100% { opacity: 0; }
+  }
+  @keyframes dot-fly-e2 {
+    0%, 54% { opacity: 0; transform: translate(0,0); }
+    55% { opacity: 1; }
+    61% { opacity: 0; transform: translate(30px, -25px); }
+    100% { opacity: 0; }
+  }
+
+  /* BIG impact on final O landing */
+  .imp-final .d1 { animation: dot-final1 8s forwards; left: 440px; bottom: 395px; width: 6px; height: 6px; }
+  .imp-final .d2 { animation: dot-final2 8s forwards; left: 470px; bottom: 400px; width: 5px; height: 5px; }
+  .imp-final .d3 { animation: dot-final3 8s forwards; left: 420px; bottom: 392px; background: white; width: 4px; height: 4px; }
+  .imp-final .d4 { animation: dot-final4 8s forwards; left: 480px; bottom: 388px; width: 4px; height: 4px; background: #FDCB6E; }
+  @keyframes dot-final1 {
+    0%, 75% { opacity: 0; transform: translate(0,0); }
+    76% { opacity: 1; }
+    84% { opacity: 0; transform: translate(-40px, -50px); }
+    100% { opacity: 0; }
+  }
+  @keyframes dot-final2 {
+    0%, 75% { opacity: 0; transform: translate(0,0); }
+    76% { opacity: 1; }
+    84% { opacity: 0; transform: translate(35px, -45px); }
+    100% { opacity: 0; }
+  }
+  @keyframes dot-final3 {
+    0%, 75% { opacity: 0; transform: translate(0,0); }
+    76% { opacity: 1; }
+    84% { opacity: 0; transform: translate(-50px, -20px); }
+    100% { opacity: 0; }
+  }
+  @keyframes dot-final4 {
+    0%, 75% { opacity: 0; transform: translate(0,0); }
+    76% { opacity: 1; }
+    84% { opacity: 0; transform: translate(45px, -15px); }
+    100% { opacity: 0; }
+  }
+
+  /* Glow ring on final landing */
+  .glow-final {
+    position: absolute;
+    left: 432px;
+    bottom: 370px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 2px solid rgba(108, 92, 231, 0.4);
+    opacity: 0;
+    z-index: 1;
+    animation: glow-ring 8s forwards;
+  }
+  @keyframes glow-ring {
+    0%, 75% { opacity: 0; transform: scale(0.5); }
+    77% { opacity: 0.8; transform: scale(1.2); }
+    85% { opacity: 0; transform: scale(2.5); }
+    100% { opacity: 0; }
+  }
+
+  /* ===== TAGLINE ===== */
+  .tagline {
+    position: absolute;
+    bottom: 300px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    opacity: 0;
+    animation: tag-in 0.8s ease-out 7s forwards;
+  }
+  .tagline p {
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  @keyframes tag-in {
+    0% { opacity: 0; transform: translateX(-50%) translateY(12px); }
+    100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* Ambient glow */
+  .ambient {
+    position: absolute;
+    left: 50%;
+    bottom: 350px;
+    width: 500px;
+    height: 200px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse, rgba(108, 92, 231, 0.06) 0%, transparent 70%);
+    z-index: 0;
+  }
+
+  button.replay {
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.35);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    z-index: 100;
+  }
+  button.replay:hover { background: rgba(255,255,255,0.12); color: white; }
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="ambient"></div>
+  <div class="floor"></div>
+
+  <!-- Word — all visible from start -->
+  <div class="word-container">
+    <span class="letter hey letter-react l-H">H</span>
+    <span class="letter hey l-e1">e</span>
+    <span class="letter hey letter-react l-y">y</span>
+    <span class="letter l-C">C</span>
+    <span class="letter l-O">o</span>
+    <span class="letter l-n">n</span>
+    <span class="letter l-c">c</span>
+    <span class="letter l-i">i</span>
+    <span class="letter l-e2">e</span>
+    <span class="letter l-r">r</span>
+    <span class="letter l-g">g</span>
+    <span class="letter letter-react l-e3">e</span>
+  </div>
+
+  <!-- Mascot -->
+  <div class="mascot">
+    <svg class="mascot-svg" viewBox="0 0 100 100" fill="none">
+      <circle cx="50" cy="50" r="38" fill="#6C5CE7"/>
+      <circle cx="50" cy="54" r="27" fill="#F0EDFF"/>
+      
+      <g class="eye-group">
+        <ellipse cx="40" cy="48" rx="5" ry="6" fill="#2D2B55"/>
+        <circle cx="41.5" cy="46" r="2" fill="white"/>
+        <ellipse cx="60" cy="48" rx="5" ry="6" fill="#2D2B55"/>
+        <circle cx="61.5" cy="46" r="2" fill="white"/>
+      </g>
+
+      <ellipse class="eye-lid" cx="40" cy="47" rx="6" ry="7"/>
+      <ellipse class="eye-lid" cx="60" cy="47" rx="6" ry="7"/>
+
+      <!-- Surprised O mouth during bouncing -->
+      <circle class="mouth-o" cx="50" cy="60" r="4" fill="#2D2B55"/>
+      
+      <!-- Happy smile after settling -->
+      <path class="mouth-smile" d="M40 56 Q50 68 60 56" stroke="#2D2B55" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+      <ellipse class="cheek" cx="32" cy="57" rx="6" ry="4" fill="#FFB8B8" opacity="0.15"/>
+      <ellipse class="cheek" cx="68" cy="57" rx="6" ry="4" fill="#FFB8B8" opacity="0.15"/>
+
+      <!-- Bellhop hat -->
+      <rect x="33" y="16" width="34" height="14" rx="4" fill="#FF6B6B"/>
+      <rect x="38" y="12" width="24" height="6" rx="3" fill="#FF5252"/>
+      <circle cx="50" cy="12" r="4" fill="#FDCB6E"/>
+      <rect x="40" y="18" width="8" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>
+    </svg>
+  </div>
+
+  <!-- Shadow -->
+  <div class="bounce-shadow"></div>
+
+  <!-- Impact particles -->
+  <div class="impact-set imp-h">
+    <div class="imp-dot d1"></div>
+    <div class="imp-dot d2"></div>
+    <div class="imp-dot d3"></div>
+  </div>
+  <div class="impact-set imp-y">
+    <div class="imp-dot d1"></div>
+    <div class="imp-dot d2"></div>
+  </div>
+  <div class="impact-set imp-e">
+    <div class="imp-dot d1"></div>
+    <div class="imp-dot d2"></div>
+  </div>
+  <div class="impact-set imp-final">
+    <div class="imp-dot d1"></div>
+    <div class="imp-dot d2"></div>
+    <div class="imp-dot d3"></div>
+    <div class="imp-dot d4"></div>
+  </div>
+
+  <!-- Glow ring on final landing -->
+  <div class="glow-final"></div>
+
+  <!-- Tagline -->
+  <div class="tagline">
+    <div style="display:flex;align-items:center;gap:12px;justify-content:center;">
+      <svg viewBox="0 0 24 24" fill="#25D366" style="width:28px;height:28px;">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+      <p>Powered by WhatsApp</p>
+    </div>
+  </div>
+
+  <button class="replay" onclick="location.reload()">↻ Replay</button>
+</div>
+</body>
+</html>

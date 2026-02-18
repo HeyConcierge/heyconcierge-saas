@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeyConcierge - Explainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0f; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Inter', -apple-system, sans-serif; overflow: hidden; }
+
+#stage {
+  width: 1080px; height: 1080px;
+  max-width: 100vw; max-height: 100vh;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+  position: relative; overflow: hidden;
+  box-shadow: 0 0 80px rgba(108,99,255,0.15);
+}
+
+/* Progress bar */
+#progress { position: absolute; bottom: 0; left: 0; height: 4px; background: linear-gradient(90deg, #6C63FF, #3B82F6); width: 0; z-index: 100; transition: none; }
+#musicNote { position: absolute; top: 20px; right: 24px; color: rgba(255,255,255,0.25); font-size: 18px; z-index: 100; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 0.25; } 50% { opacity: 0.5; } }
+
+#controls { position: absolute; bottom: 16px; right: 16px; z-index: 100; display: flex; gap: 8px; }
+#controls button { background: rgba(255,255,255,0.1); border: none; color: rgba(255,255,255,0.5); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 14px; backdrop-filter: blur(10px); transition: all 0.2s; }
+#controls button:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+.scene { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.6s ease; }
+.scene.active { opacity: 1; }
+
+/* ---- Scene 1: The Problem ---- */
+#scene1 .phone-frame {
+  width: 260px; height: 500px; border: 3px solid rgba(255,255,255,0.15); border-radius: 36px; position: relative;
+  background: #111; overflow: hidden;
+}
+#scene1 .phone-frame .notch { width: 100px; height: 24px; background: #0a0a0f; border-radius: 0 0 16px 16px; margin: 0 auto; position: relative; z-index: 2; }
+#scene1 .msg-stack { padding: 16px; display: flex; flex-direction: column; gap: 8px; position: absolute; top: 30px; left: 0; right: 0; bottom: 0; overflow: hidden; }
+.guest-msg {
+  background: rgba(255,255,255,0.08); border-radius: 16px 16px 16px 4px; padding: 10px 14px;
+  color: #fff; font-size: 13px; max-width: 85%; opacity: 0; transform: translateY(20px) scale(0.95);
+  line-height: 1.4; position: relative;
+}
+.guest-msg .time { font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+.guest-msg.show { opacity: 1; transform: translateY(0) scale(1); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+#scene1 .buzz { animation: none; }
+#scene1 .buzz.active { animation: buzz 0.15s ease 3; }
+@keyframes buzz { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+#scene1 h2 { color: #fff; font-size: 36px; font-weight: 700; margin-top: 40px; opacity: 0; transform: translateY(20px); letter-spacing: -0.5px; }
+#scene1 h2.show { opacity: 1; transform: translateY(0); transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+#scene1 .counter { color: rgba(255,255,255,0.4); font-size: 14px; margin-top: 8px; opacity: 0; }
+#scene1 .counter.show { opacity: 1; transition: opacity 0.5s; }
+
+/* Red notification badge */
+.notif-badge { position: absolute; top: -4px; right: -4px; background: #ff3b5c; color: #fff; font-size: 10px; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0); }
+.notif-badge.show { opacity: 1; transform: scale(1); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* ---- Scene 2: The Solution ---- */
+#scene2 .logo-container { text-align: center; }
+#scene2 .logo-icon {
+  width: 120px; height: 120px; border-radius: 30px;
+  background: linear-gradient(135deg, #6C63FF, #3B82F6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px; margin: 0 auto 32px;
+  opacity: 0; transform: scale(0.3) rotate(-10deg);
+  box-shadow: 0 20px 60px rgba(108,99,255,0.4);
+}
+#scene2 .logo-icon.show { opacity: 1; transform: scale(1) rotate(0deg); transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+#scene2 h1 { color: #fff; font-size: 52px; font-weight: 800; opacity: 0; transform: translateY(30px); letter-spacing: -1px; }
+#scene2 h1.show { opacity: 1; transform: translateY(0); transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.3s; }
+#scene2 .tagline { color: rgba(255,255,255,0.5); font-size: 22px; font-weight: 400; margin-top: 12px; opacity: 0; }
+#scene2 .tagline.show { opacity: 1; transition: opacity 0.8s ease 0.6s; }
+#scene2 .glow { position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(108,99,255,0.15) 0%, transparent 70%); border-radius: 50%; opacity: 0; }
+#scene2 .glow.show { opacity: 1; transition: opacity 1.5s; }
+
+/* ---- Scene 3: How it Works ---- */
+#scene3 .step { opacity: 0; transform: translateY(30px); text-align: center; position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#scene3 .step.show { opacity: 1; transform: translateY(0); transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+#scene3 .step.hide { opacity: 0; transform: translateY(-20px); transition: all 0.4s ease; }
+
+.wa-chat {
+  width: 320px; background: #0b141a; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.wa-header { background: #1f2c34; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+.wa-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #6C63FF, #3B82F6); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.wa-name { color: #fff; font-size: 14px; font-weight: 500; }
+.wa-status { color: rgba(255,255,255,0.5); font-size: 11px; }
+.wa-body { padding: 16px; min-height: 200px; display: flex; flex-direction: column; gap: 8px; background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 15 L30 25 L25 15Z' fill='%23ffffff' fill-opacity='0.02'/%3E%3C/svg%3E"); }
+.wa-msg-out { align-self: flex-end; background: #005c4b; color: #fff; padding: 8px 12px; border-radius: 10px 10px 4px 10px; font-size: 13px; max-width: 80%; opacity: 0; transform: scale(0.8); line-height: 1.4; }
+.wa-msg-in { align-self: flex-start; background: #1f2c34; color: #fff; padding: 8px 12px; border-radius: 10px 10px 10px 4px; font-size: 13px; max-width: 85%; opacity: 0; transform: scale(0.8); line-height: 1.4; }
+.wa-msg-out.show, .wa-msg-in.show { opacity: 1; transform: scale(1); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.wa-msg-in .link { color: #53bdeb; text-decoration: underline; }
+.wa-time { font-size: 9px; color: rgba(255,255,255,0.4); text-align: right; margin-top: 2px; }
+
+.qr-code { width: 160px; height: 160px; background: #fff; border-radius: 12px; padding: 12px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; }
+.qr-inner { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(11,1fr); grid-template-rows: repeat(11,1fr); gap: 1px; }
+.qr-inner span { background: #111; border-radius: 1px; }
+.qr-inner span:nth-child(even) { background: transparent; }
+.qr-inner span:nth-child(3n+1) { background: #111; }
+
+.step-label { color: rgba(255,255,255,0.4); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
+.step-title { color: #fff; font-size: 24px; font-weight: 600; margin-top: 16px; }
+
+.flags { display: flex; gap: 8px; margin-top: 16px; font-size: 28px; opacity: 0; }
+.flags.show { opacity: 1; transition: opacity 0.5s; }
+
+/* Phone with QR */
+.phone-mini { width: 180px; height: 340px; border: 2px solid rgba(255,255,255,0.15); border-radius: 28px; background: #111; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; position: relative; }
+.phone-mini .cam-dot { width: 8px; height: 8px; border-radius: 50%; background: #222; position: absolute; top: 12px; }
+.scan-line { position: absolute; left: 20px; right: 20px; height: 2px; background: linear-gradient(90deg, transparent, #6C63FF, transparent); top: 30%; animation: scanMove 1.5s ease-in-out infinite; opacity: 0.7; }
+@keyframes scanMove { 0%,100% { top: 30%; } 50% { top: 70%; } }
+
+/* ---- Scene 4: Features ---- */
+#scene4 .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 40px; max-width: 600px; }
+.feature-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px; padding: 28px 24px; text-align: center;
+  opacity: 0; transform: translateY(30px) scale(0.9);
+}
+.feature-card.show { opacity: 1; transform: translateY(0) scale(1); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.feature-card .icon { font-size: 36px; margin-bottom: 12px; }
+.feature-card .label { color: #fff; font-size: 15px; font-weight: 600; }
+
+#scene4 h2 { color: #fff; font-size: 32px; font-weight: 700; margin-bottom: 8px; opacity: 0; letter-spacing: -0.5px; }
+#scene4 h2.show { opacity: 1; transition: opacity 0.6s; }
+#scene4 .subtitle { color: rgba(255,255,255,0.4); font-size: 16px; margin-bottom: 28px; opacity: 0; }
+#scene4 .subtitle.show { opacity: 1; transition: opacity 0.6s 0.2s; }
+#scene4 .setup-text { color: #6C63FF; font-size: 18px; font-weight: 600; margin-top: 24px; opacity: 0; }
+#scene4 .setup-text.show { opacity: 1; transition: opacity 0.5s; }
+
+/* ---- Scene 5: Social Proof ---- */
+#scene5 .proof-content { text-align: center; }
+#scene5 h2 { color: #fff; font-size: 30px; font-weight: 600; opacity: 0; transform: translateY(20px); max-width: 500px; line-height: 1.4; }
+#scene5 h2.show { opacity: 1; transform: translateY(0); transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+#scene5 .stats { display: flex; gap: 40px; margin-top: 48px; }
+.stat { text-align: center; opacity: 0; transform: translateY(20px); }
+.stat.show { opacity: 1; transform: translateY(0); transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.stat .value { color: #fff; font-size: 40px; font-weight: 800; background: linear-gradient(135deg, #6C63FF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stat .desc { color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 4px; font-weight: 500; }
+.stat .divider { color: rgba(255,255,255,0.1); font-size: 40px; font-weight: 200; align-self: center; }
+
+/* ---- Scene 6: CTA ---- */
+#scene6 .cta-content { text-align: center; }
+#scene6 h1 { color: #fff; font-size: 44px; font-weight: 800; opacity: 0; transform: scale(0.9); letter-spacing: -1px; }
+#scene6 h1.show { opacity: 1; transform: scale(1); transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+#scene6 .cta-btn {
+  display: inline-block; margin-top: 32px; padding: 18px 48px;
+  background: linear-gradient(135deg, #6C63FF, #3B82F6); color: #fff;
+  font-size: 20px; font-weight: 700; border-radius: 60px; opacity: 0; transform: translateY(20px);
+  box-shadow: 0 12px 40px rgba(108,99,255,0.4);
+}
+#scene6 .cta-btn.show { opacity: 1; transform: translateY(0); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s; }
+#scene6 .url { color: rgba(255,255,255,0.4); font-size: 18px; margin-top: 20px; opacity: 0; font-weight: 500; }
+#scene6 .url.show { opacity: 1; transition: opacity 0.8s ease 0.6s; }
+#scene6 .final-logo { margin-top: 48px; opacity: 0; }
+#scene6 .final-logo.show { opacity: 1; transition: opacity 1s ease 0.8s; }
+#scene6 .final-logo .icon { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #6C63FF, #3B82F6); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 12px; }
+#scene6 .final-tagline { color: rgba(255,255,255,0.3); font-size: 14px; }
+
+/* Ambient particles */
+.particle { position: absolute; width: 4px; height: 4px; background: rgba(108,99,255,0.3); border-radius: 50%; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="musicNote">♪</div>
+  <div id="progress"></div>
+
+  <!-- Scene 1: The Problem -->
+  <div id="scene1" class="scene active">
+    <div class="phone-frame buzz" id="phone1">
+      <div class="notch"></div>
+      <div class="msg-stack" id="msgStack">
+        <div class="guest-msg" style="transition-delay:0s">What's the WiFi password? 📶<div class="time">21:34</div><div class="notif-badge">1</div></div>
+        <div class="guest-msg" style="transition-delay:0.15s">How do I check in? 🔑<div class="time">21:35</div><div class="notif-badge">2</div></div>
+        <div class="guest-msg" style="transition-delay:0.3s">Where should I eat? 🍽️<div class="time">21:36</div><div class="notif-badge">3</div></div>
+        <div class="guest-msg" style="transition-delay:0.45s">The hot water isn't working 😰<div class="time">21:37</div><div class="notif-badge">4</div></div>
+        <div class="guest-msg" style="transition-delay:0.6s">What time is checkout? ⏰<div class="time">21:38</div><div class="notif-badge">5</div></div>
+        <div class="guest-msg" style="transition-delay:0.75s">Wo kann ich parken? 🚗<div class="time">21:39</div><div class="notif-badge">6</div></div>
+        <div class="guest-msg" style="transition-delay:0.9s">Is there a washing machine?<div class="time">21:40</div><div class="notif-badge">7</div></div>
+      </div>
+    </div>
+    <h2 id="s1title">Every host knows the struggle</h2>
+    <div class="counter" id="s1counter">7 unread messages...</div>
+  </div>
+
+  <!-- Scene 2: The Solution -->
+  <div id="scene2" class="scene">
+    <div class="glow" id="s2glow"></div>
+    <div class="logo-container">
+      <div class="logo-icon" id="s2logo">🏠</div>
+      <h1 id="s2title">HeyConcierge</h1>
+      <div class="tagline" id="s2tagline">Your guests' favorite new friend</div>
+    </div>
+  </div>
+
+  <!-- Scene 3: How it Works -->
+  <div id="scene3" class="scene">
+    <!-- Step 1: QR -->
+    <div class="step" id="s3step1">
+      <div class="step-label">Step 1</div>
+      <div class="phone-mini">
+        <div class="cam-dot"></div>
+        <div class="qr-code">
+          <div class="qr-inner" id="qrGrid"></div>
+        </div>
+        <div class="scan-line"></div>
+      </div>
+      <div class="step-title">Guest scans QR code</div>
+    </div>
+    <!-- Step 2-3: WiFi -->
+    <div class="step" id="s3step2">
+      <div class="step-label">Instant answers</div>
+      <div class="wa-chat">
+        <div class="wa-header">
+          <div class="wa-avatar">🏠</div>
+          <div><div class="wa-name">HeyConcierge</div><div class="wa-status">online</div></div>
+        </div>
+        <div class="wa-body">
+          <div class="wa-msg-out" id="wa1q">What's the WiFi password? 📶</div>
+          <div class="wa-msg-in" id="wa1a">📶 <strong>WiFi:</strong> MountainView_5G<br><strong>Password:</strong> Welcome2024!<div class="wa-time">✓✓ 21:34</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Step 4: Restaurant -->
+    <div class="step" id="s3step3">
+      <div class="step-label">Local recommendations</div>
+      <div class="wa-chat">
+        <div class="wa-header">
+          <div class="wa-avatar">🏠</div>
+          <div><div class="wa-name">HeyConcierge</div><div class="wa-status">online</div></div>
+        </div>
+        <div class="wa-body">
+          <div class="wa-msg-out" id="wa2q">Best restaurant nearby? 🍽️</div>
+          <div class="wa-msg-in" id="wa2a">🍽️ I recommend <strong>Hildr Gastro Bar</strong> — amazing Arctic cuisine!<br><br><span class="link">📍 Open in Google Maps</span><div class="wa-time">✓✓ 21:35</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Step 5: German -->
+    <div class="step" id="s3step4">
+      <div class="step-label">50+ languages</div>
+      <div class="wa-chat">
+        <div class="wa-header">
+          <div class="wa-avatar">🏠</div>
+          <div><div class="wa-name">HeyConcierge</div><div class="wa-status">online</div></div>
+        </div>
+        <div class="wa-body">
+          <div class="wa-msg-out" id="wa3q">Wie komme ich rein? 🔑</div>
+          <div class="wa-msg-in" id="wa3a">🔑 Der Schlüsselkasten befindet sich links neben der Tür. Code: <strong>4821</strong><br><br>📸 <em>Foto der Keybox angehängt</em><div class="wa-time">✓✓ 21:36</div></div>
+        </div>
+      </div>
+      <div class="flags" id="s3flags">
+        <span>🇬🇧</span><span>🇩🇪</span><span>🇫🇷</span><span>🇪🇸</span><span>🇯🇵</span><span>🇳🇴</span><span>🇨🇳</span><span>🇧🇷</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scene 4: Features -->
+  <div id="scene4" class="scene">
+    <h2 id="s4title">Everything your guests need</h2>
+    <div class="subtitle" id="s4sub">Powered by AI, feels like magic</div>
+    <div class="features-grid">
+      <div class="feature-card" id="f1"><div class="icon">🌍</div><div class="label">50+ Languages</div></div>
+      <div class="feature-card" id="f2"><div class="icon">⚡</div><div class="label">Instant Responses</div></div>
+      <div class="feature-card" id="f3"><div class="icon">📸</div><div class="label">Photo Instructions</div></div>
+      <div class="feature-card" id="f4"><div class="icon">🌤️</div><div class="label">Live Weather</div></div>
+      <div class="feature-card" id="f5"><div class="icon">📅</div><div class="label">Auto Check-in/out</div></div>
+      <div class="feature-card" id="f6"><div class="icon">🔔</div><div class="label">Smart Escalation</div></div>
+    </div>
+    <div class="setup-text" id="s4setup">Set up in 5 minutes. No tech skills needed.</div>
+  </div>
+
+  <!-- Scene 5: Social Proof -->
+  <div id="scene5" class="scene">
+    <div class="proof-content">
+      <h2 id="s5title">Trusted by property owners<br>in Tromsø, Norway 🇳🇴</h2>
+      <div class="stats">
+        <div class="stat" id="st1"><div class="value">24/7</div><div class="desc">Always on</div></div>
+        <div class="stat" id="st2"><div class="value">50+</div><div class="desc">Languages</div></div>
+        <div class="stat" id="st3"><div class="value">&lt;2s</div><div class="desc">Response time</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scene 6: CTA -->
+  <div id="scene6" class="scene">
+    <div class="cta-content">
+      <h1 id="s6title">Try HeyConcierge Free</h1>
+      <div class="cta-btn" id="s6btn">Get Started →</div>
+      <div class="url" id="s6url">heyconcierge.com</div>
+      <div class="final-logo" id="s6logo">
+        <div class="icon">🏠</div>
+        <div class="final-tagline">Your guests' favorite new friend</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button id="btnPause" title="Pause">⏸</button>
+    <button id="btnReplay" title="Replay">↺</button>
+  </div>
+</div>
+
+<script>
+// Generate QR grid
+const qr = document.getElementById('qrGrid');
+for (let i = 0; i < 121; i++) { const s = document.createElement('span'); qr.appendChild(s); }
+
+const DURATION = 55000; // 55 seconds total
+let startTime = null, paused = false, pausedAt = 0, elapsed = 0;
+const progress = document.getElementById('progress');
+
+// Timeline: [time_ms, action]
+const timeline = [
+  // Scene 1
+  [300, () => { document.getElementById('phone1').classList.add('active'); }],
+  [500, () => showAll('#msgStack .guest-msg', 200)],
+  [1500, () => document.getElementById('phone1').classList.add('active')],
+  [1800, () => showAll('#msgStack .notif-badge', 150)],
+  [3000, () => { document.getElementById('s1title').classList.add('show'); }],
+  [4500, () => { document.getElementById('s1counter').classList.add('show'); }],
+  [5000, () => { document.getElementById('phone1').classList.add('active'); triggerBuzz(); }],
+
+  // Scene 2 (8s)
+  [8000, () => switchScene('scene1', 'scene2')],
+  [8400, () => document.getElementById('s2glow').classList.add('show')],
+  [8600, () => document.getElementById('s2logo').classList.add('show')],
+  [9200, () => document.getElementById('s2title').classList.add('show')],
+  [10000, () => document.getElementById('s2tagline').classList.add('show')],
+
+  // Scene 3 (15s)
+  [15000, () => switchScene('scene2', 'scene3')],
+  [15200, () => document.getElementById('s3step1').classList.add('show')],
+
+  // Step 2: WiFi (18s)
+  [18000, () => { document.getElementById('s3step1').classList.remove('show'); document.getElementById('s3step1').classList.add('hide'); }],
+  [18400, () => document.getElementById('s3step2').classList.add('show')],
+  [18600, () => document.getElementById('wa1q').classList.add('show')],
+  [19200, () => document.getElementById('wa1a').classList.add('show')],
+
+  // Step 3: Restaurant (21.5s)
+  [21500, () => { document.getElementById('s3step2').classList.remove('show'); document.getElementById('s3step2').classList.add('hide'); }],
+  [21900, () => document.getElementById('s3step3').classList.add('show')],
+  [22100, () => document.getElementById('wa2q').classList.add('show')],
+  [22700, () => document.getElementById('wa2a').classList.add('show')],
+
+  // Step 4: German (25.5s)
+  [25500, () => { document.getElementById('s3step3').classList.remove('show'); document.getElementById('s3step3').classList.add('hide'); }],
+  [25900, () => document.getElementById('s3step4').classList.add('show')],
+  [26100, () => document.getElementById('wa3q').classList.add('show')],
+  [26700, () => document.getElementById('wa3a').classList.add('show')],
+  [27500, () => document.getElementById('s3flags').classList.add('show')],
+
+  // Scene 4 (30s)
+  [30000, () => switchScene('scene3', 'scene4')],
+  [30400, () => document.getElementById('s4title').classList.add('show')],
+  [30800, () => document.getElementById('s4sub').classList.add('show')],
+  [31500, () => document.getElementById('f1').classList.add('show')],
+  [32000, () => document.getElementById('f2').classList.add('show')],
+  [32500, () => document.getElementById('f3').classList.add('show')],
+  [33000, () => document.getElementById('f4').classList.add('show')],
+  [33500, () => document.getElementById('f5').classList.add('show')],
+  [34000, () => document.getElementById('f6').classList.add('show')],
+  [35500, () => document.getElementById('s4setup').classList.add('show')],
+
+  // Scene 5 (42s)
+  [42000, () => switchScene('scene4', 'scene5')],
+  [42500, () => document.getElementById('s5title').classList.add('show')],
+  [43500, () => document.getElementById('st1').classList.add('show')],
+  [44000, () => document.getElementById('st2').classList.add('show')],
+  [44500, () => document.getElementById('st3').classList.add('show')],
+
+  // Scene 6 (50s)
+  [50000, () => switchScene('scene5', 'scene6')],
+  [50400, () => document.getElementById('s6title').classList.add('show')],
+  [51000, () => document.getElementById('s6btn').classList.add('show')],
+  [51500, () => document.getElementById('s6url').classList.add('show')],
+  [52000, () => document.getElementById('s6logo').classList.add('show')],
+];
+
+let executed = new Set();
+
+function showAll(selector, stagger) {
+  document.querySelectorAll(selector).forEach((el, i) => {
+    setTimeout(() => el.classList.add('show'), i * (stagger || 100));
+  });
+}
+
+function switchScene(from, to) {
+  document.getElementById(from).classList.remove('active');
+  document.getElementById(to).classList.add('active');
+}
+
+function triggerBuzz() {
+  const p = document.getElementById('phone1');
+  p.classList.remove('active');
+  void p.offsetWidth;
+  p.classList.add('active');
+}
+
+function tick(ts) {
+  if (!startTime) startTime = ts;
+  if (paused) { startTime = ts - pausedAt; requestAnimationFrame(tick); return; }
+
+  elapsed = ts - startTime;
+  const pct = Math.min(elapsed / DURATION * 100, 100);
+  progress.style.width = pct + '%';
+
+  timeline.forEach(([time, fn], i) => {
+    if (elapsed >= time && !executed.has(i)) { executed.add(i); fn(); }
+  });
+
+  if (elapsed < DURATION + 2000) requestAnimationFrame(tick);
+}
+
+requestAnimationFrame(tick);
+
+// Controls
+document.getElementById('btnPause').addEventListener('click', () => {
+  paused = !paused;
+  if (paused) { pausedAt = elapsed; document.getElementById('btnPause').textContent = '▶'; }
+  else { document.getElementById('btnPause').textContent = '⏸'; }
+});
+
+document.getElementById('btnReplay').addEventListener('click', () => {
+  executed.clear();
+  startTime = null; paused = false; pausedAt = 0;
+  document.getElementById('btnPause').textContent = '⏸';
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.show, .hide').forEach(el => { el.classList.remove('show', 'hide'); });
+  document.getElementById('scene1').classList.add('active');
+  document.getElementById('phone1').classList.remove('active');
+  requestAnimationFrame(tick);
+});
+
+// Ambient particles
+for (let i = 0; i < 12; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.top = Math.random() * 100 + '%';
+  p.style.animationDuration = (3 + Math.random() * 4) + 's';
+  p.style.opacity = Math.random() * 0.3;
+  p.style.animation = `float${i % 2 ? 'A' : 'B'} ${4 + Math.random() * 6}s ease-in-out infinite`;
+  document.getElementById('stage').appendChild(p);
+}
+
+const style = document.createElement('style');
+style.textContent = `
+@keyframes floatA { 0%,100% { transform: translateY(0) translateX(0); } 50% { transform: translateY(-30px) translateX(10px); } }
+@keyframes floatB { 0%,100% { transform: translateY(0) translateX(0); } 50% { transform: translateY(20px) translateX(-15px); } }
+`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>

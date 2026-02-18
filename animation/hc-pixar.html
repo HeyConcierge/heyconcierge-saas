@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeyConcierge — Pixar Intro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #0a0a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .scene {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 50% 50%, #13132e 0%, #0a0a1a 70%);
+  }
+
+  /* The word container */
+  .word-container {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .letter {
+    font-size: 96px;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+    opacity: 0;
+    animation: letter-appear 0.4s ease-out forwards;
+  }
+  .hey { color: #6C5CE7; }
+
+  /* Stagger letter appearances */
+  .l-H { animation-delay: 0.3s; }
+  .l-e1 { animation-delay: 0.4s; }
+  .l-y { animation-delay: 0.5s; }
+  .l-C { animation-delay: 0.7s; }
+  .l-o { animation-delay: 0.8s; }
+  .l-n { animation-delay: 0.9s; }
+  .l-c { animation-delay: 1.0s; }
+  /* i is special — starts visible then gets squashed */
+  .l-i {
+    animation: none;
+    opacity: 1;
+    display: inline-block;
+    transform-origin: bottom center;
+    animation: i-exist 5s forwards;
+  }
+  .l-e2 { animation-delay: 1.2s; }
+  .l-r { animation-delay: 1.3s; }
+  .l-g { animation-delay: 1.4s; }
+  .l-e3 { animation-delay: 1.5s; }
+
+  @keyframes letter-appear {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* The "i" letter gets squished when mascot lands */
+  @keyframes i-exist {
+    0%, 34% { opacity: 1; transform: scaleY(1) scaleX(1); }
+    /* First bounce peek - slight reaction */
+    38% { opacity: 1; transform: scaleY(0.85) scaleX(1.1); }
+    40% { opacity: 1; transform: scaleY(1) scaleX(1); }
+    /* Second bounce - more squish */
+    48% { opacity: 1; transform: scaleY(0.6) scaleX(1.3); }
+    50% { opacity: 1; transform: scaleY(0.9) scaleX(1.05); }
+    /* Final slam - fully squished */
+    58% { opacity: 1; transform: scaleY(0.15) scaleX(2); }
+    60% { opacity: 0; transform: scaleY(0) scaleX(2.5); }
+    100% { opacity: 0; transform: scaleY(0); }
+  }
+
+  /* Mascot */
+  .mascot-wrapper {
+    position: absolute;
+    z-index: 10;
+    /* Position above the "i" */
+    left: 50%;
+    transform: translateX(10px);
+    bottom: 520px;
+    width: 100px;
+    height: 100px;
+  }
+
+  .mascot {
+    width: 100px;
+    height: 100px;
+    transform-origin: bottom center;
+    animation: mascot-sequence 5s forwards;
+  }
+
+  @keyframes mascot-sequence {
+    /* Start off screen top */
+    0% { 
+      transform: translateY(-600px) scale(0.6);
+      opacity: 0;
+    }
+    /* Appear */
+    5% {
+      opacity: 1;
+      transform: translateY(-600px) scale(0.6);
+    }
+    /* First hop down - stretch while falling */
+    15% {
+      transform: translateY(-200px) scaleY(1.3) scaleX(0.8) scale(0.7);
+      opacity: 1;
+    }
+    /* First land - squash */
+    20% {
+      transform: translateY(-20px) scaleY(0.6) scaleX(1.4) scale(0.75);
+    }
+    /* First bounce up */
+    25% {
+      transform: translateY(-350px) scaleY(1.2) scaleX(0.85) scale(0.8);
+    }
+    /* Stretch while falling second time */
+    32% {
+      transform: translateY(-100px) scaleY(1.4) scaleX(0.75) scale(0.85);
+    }
+    /* Second land - bigger squash */
+    36% {
+      transform: translateY(-10px) scaleY(0.5) scaleX(1.5) scale(0.85);
+    }
+    /* Second bounce - smaller */
+    40% {
+      transform: translateY(-250px) scaleY(1.15) scaleX(0.9) scale(0.9);
+    }
+    /* Stretch falling for final slam */
+    48% {
+      transform: translateY(-80px) scaleY(1.5) scaleX(0.7) scale(0.95);
+    }
+    /* FINAL SLAM onto the "i" — big squash */
+    53% {
+      transform: translateY(5px) scaleY(0.45) scaleX(1.6) scale(1);
+    }
+    /* Recover - bounce settle */
+    58% {
+      transform: translateY(-30px) scaleY(1.1) scaleX(0.95) scale(1);
+    }
+    62% {
+      transform: translateY(0px) scaleY(0.9) scaleX(1.05) scale(1);
+    }
+    66% {
+      transform: translateY(-10px) scaleY(1.05) scaleX(0.98) scale(1);
+    }
+    70% {
+      transform: translateY(0px) scaleY(1) scaleX(1) scale(1);
+    }
+    /* Settled - now look around */
+    75% {
+      transform: translateY(0px) scaleY(1) scaleX(1) scale(1);
+    }
+    /* Happy little bounce */
+    80% {
+      transform: translateY(-8px) scale(1);
+    }
+    85% {
+      transform: translateY(0px) scale(1);
+    }
+    100% {
+      transform: translateY(0px) scale(1);
+    }
+  }
+
+  .mascot-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 10px 30px rgba(108, 92, 231, 0.5));
+  }
+
+  /* Shadow under mascot */
+  .mascot-shadow {
+    position: absolute;
+    left: 50%;
+    transform: translateX(10px);
+    bottom: 478px;
+    width: 80px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+    animation: shadow-sequence 5s forwards;
+    z-index: 1;
+  }
+
+  @keyframes shadow-sequence {
+    0%, 5% { opacity: 0; transform: translateX(-50%) scale(0.3); }
+    15% { opacity: 0.2; transform: translateX(-50%) scale(0.6); }
+    20% { opacity: 0.6; transform: translateX(-50%) scale(1.2); }
+    25% { opacity: 0.15; transform: translateX(-50%) scale(0.4); }
+    36% { opacity: 0.7; transform: translateX(-50%) scale(1.3); }
+    40% { opacity: 0.1; transform: translateX(-50%) scale(0.4); }
+    53% { opacity: 0.8; transform: translateX(-50%) scale(1.5); }
+    58% { opacity: 0.4; transform: translateX(-50%) scale(0.8); }
+    70%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+  }
+
+  /* Impact flash on final slam */
+  .impact-flash {
+    position: absolute;
+    left: 50%;
+    bottom: 480px;
+    transform: translateX(10px);
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(108, 92, 231, 0.4) 0%, transparent 70%);
+    opacity: 0;
+    animation: flash 5s forwards;
+    z-index: 0;
+  }
+  @keyframes flash {
+    0%, 52% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+    54% { opacity: 1; transform: translateX(-50%) scale(1.5); }
+    60% { opacity: 0; transform: translateX(-50%) scale(2); }
+    100% { opacity: 0; }
+  }
+
+  /* Small debris particles on impact */
+  .debris {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #6C5CE7;
+    border-radius: 50%;
+    opacity: 0;
+    z-index: 5;
+  }
+  .debris-1 { left: calc(50% - 10px); bottom: 490px; animation: debris-fly 5s forwards; }
+  .debris-2 { left: calc(50% + 20px); bottom: 490px; animation: debris-fly2 5s forwards; }
+  .debris-3 { left: calc(50% + 5px); bottom: 495px; animation: debris-fly3 5s forwards; width: 4px; height: 4px; background: white; }
+  .debris-4 { left: calc(50% + 30px); bottom: 488px; animation: debris-fly4 5s forwards; width: 5px; height: 5px; }
+
+  @keyframes debris-fly {
+    0%, 53% { opacity: 0; transform: translate(0, 0); }
+    54% { opacity: 1; }
+    70% { opacity: 0; transform: translate(-60px, -80px) rotate(180deg); }
+    100% { opacity: 0; }
+  }
+  @keyframes debris-fly2 {
+    0%, 53% { opacity: 0; transform: translate(0, 0); }
+    54% { opacity: 1; }
+    70% { opacity: 0; transform: translate(50px, -60px) rotate(-120deg); }
+    100% { opacity: 0; }
+  }
+  @keyframes debris-fly3 {
+    0%, 53% { opacity: 0; transform: translate(0, 0); }
+    54% { opacity: 1; }
+    70% { opacity: 0; transform: translate(-30px, -100px) rotate(90deg); }
+    100% { opacity: 0; }
+  }
+  @keyframes debris-fly4 {
+    0%, 53% { opacity: 0; transform: translate(0, 0); }
+    54% { opacity: 1; }
+    70% { opacity: 0; transform: translate(70px, -40px) rotate(-200deg); }
+    100% { opacity: 0; }
+  }
+
+  /* Tagline appears after settle */
+  .tagline {
+    position: absolute;
+    bottom: 320px;
+    z-index: 3;
+    opacity: 0;
+    animation: fade-in 0.8s ease-out forwards;
+    animation-delay: 4s;
+  }
+  .tagline p {
+    font-size: 28px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+  }
+  @keyframes fade-in {
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Replay button */
+  .replay {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.5);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    z-index: 100;
+    transition: all 0.2s;
+  }
+  .replay:hover { background: rgba(255,255,255,0.2); color: white; }
+</style>
+</head>
+<body>
+<div class="scene">
+
+  <!-- The word "HeyConcierge" with i as separate element -->
+  <div class="word-container">
+    <span class="letter hey l-H">H</span>
+    <span class="letter hey l-e1">e</span>
+    <span class="letter hey l-y">y</span>
+    <span class="letter l-C">C</span>
+    <span class="letter l-o">o</span>
+    <span class="letter l-n">n</span>
+    <span class="letter l-c">c</span>
+    <span class="letter l-i">i</span>
+    <span class="letter l-e2">e</span>
+    <span class="letter l-r">r</span>
+    <span class="letter l-g">g</span>
+    <span class="letter l-e3">e</span>
+  </div>
+
+  <!-- Mascot bouncing -->
+  <div class="mascot-wrapper">
+    <div class="mascot">
+      <svg class="mascot-svg" viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="35" fill="#6C5CE7"/>
+        <circle cx="50" cy="53" r="24" fill="#F0EDFF"/>
+        <ellipse cx="42" cy="48" rx="4" ry="5" fill="#2D2B55"/>
+        <ellipse cx="58" cy="48" rx="4" ry="5" fill="#2D2B55"/>
+        <circle cx="43" cy="46" r="1.5" fill="white"/>
+        <circle cx="59" cy="46" r="1.5" fill="white"/>
+        <path d="M44 57 Q50 62 56 57" stroke="#2D2B55" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <ellipse cx="35" cy="55" rx="5" ry="3" fill="#FFB8B8" opacity="0.5"/>
+        <ellipse cx="65" cy="55" rx="5" ry="3" fill="#FFB8B8" opacity="0.5"/>
+        <rect x="38" y="18" width="24" height="10" rx="3" fill="#FF6B6B"/>
+        <circle cx="50" cy="17" r="3" fill="#FDCB6E"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Shadow -->
+  <div class="mascot-shadow"></div>
+
+  <!-- Impact flash -->
+  <div class="impact-flash"></div>
+
+  <!-- Debris -->
+  <div class="debris debris-1"></div>
+  <div class="debris debris-2"></div>
+  <div class="debris debris-3"></div>
+  <div class="debris debris-4"></div>
+
+  <!-- Tagline -->
+  <div class="tagline">
+    <p>Your AI Guest Concierge</p>
+  </div>
+
+  <!-- Replay -->
+  <button class="replay" onclick="location.reload()">↻ Replay</button>
+</div>
+</body>
+</html>
