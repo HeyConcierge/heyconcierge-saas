@@ -100,25 +100,39 @@ export async function GET(request: NextRequest) {
 
     // Redirect to signup if new user or no organization
     const redirectUrl = isNewUser || !org ? '/signup?step=2' : '/dashboard'
+    
+    console.log('[Microsoft OAuth] User info:', {
+      sub: userInfo.sub,
+      email: userInfo.email,
+      isNewUser,
+      hasOrg: !!org,
+      redirectUrl
+    })
+    
     const response = NextResponse.redirect(new URL(redirectUrl, request.url))
     
+    // Set cookies with explicit domain for localhost
     response.cookies.set('user_id', userInfo.sub, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Explicitly false for localhost
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
+      domain: undefined, // Let browser decide
     })
 
     response.cookies.set('user_email', userInfo.email, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Explicitly false for localhost
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
+      domain: undefined, // Let browser decide
     })
 
     response.cookies.delete('oauth_state')
+    
+    console.log('[Microsoft OAuth] Cookies set, redirecting to:', redirectUrl)
 
     return response
   } catch (error) {
