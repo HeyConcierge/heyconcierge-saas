@@ -89,6 +89,26 @@ function SignupPage() {
     setLoading(true)
     try {
       const userEmail = getCookie('user_email')
+      const urlParams = new URLSearchParams(window.location.search)
+      const sessionId = urlParams.get('session_id')
+
+      // Retrieve Stripe session data (customer ID, subscription ID)
+      let stripeData: any = {}
+      if (sessionId) {
+        try {
+          const sessionResponse = await fetch('/api/stripe-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId }),
+          })
+          if (sessionResponse.ok) {
+            stripeData = await sessionResponse.json()
+            console.log('[Signup] Stripe session data:', stripeData)
+          }
+        } catch (err) {
+          console.error('[Signup] Failed to retrieve Stripe session:', err)
+        }
+      }
 
       // Use existing org or create new
       let org: any = existingOrg
@@ -106,6 +126,10 @@ function SignupPage() {
             .update({ 
               user_id: userId,
               plan: form.plan,
+              stripe_customer_id: stripeData.customerId || foundOrg.stripe_customer_id,
+              subscription_status: 'trialing',
+              trial_started_at: new Date().toISOString(),
+              trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
             })
             .eq('id', foundOrg.id)
           org = foundOrg
@@ -119,7 +143,11 @@ function SignupPage() {
             name: form.company || form.name, 
             email: userEmail || form.email, 
             plan: form.plan,
-            user_id: userId
+            user_id: userId,
+            stripe_customer_id: stripeData.customerId || null,
+            subscription_status: 'trialing',
+            trial_started_at: new Date().toISOString(),
+            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
           })
           .select()
           .single()
