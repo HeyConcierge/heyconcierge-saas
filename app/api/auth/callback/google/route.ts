@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userInfo: GoogleUserInfo = await userInfoResponse.json()
+    console.log('🔵 Raw Google userinfo response:', userInfo)
     console.log('🔵 User info:', userInfo.email)
 
     // Create or update user in Supabase
@@ -122,7 +123,15 @@ export async function GET(request: NextRequest) {
 
     // Redirect to signup if new user or no organization (start at step 1 to pre-fill info)
     const finalRedirect = isNewUser || !org ? '/signup?step=1' : '/dashboard'
-    console.log(`🔵 Final redirect: ${finalRedirect}`)
+    
+    console.log('[Google OAuth] User info:', {
+      sub: userInfo.sub,
+      email: userInfo.email,
+      name: userInfo.name,
+      isNewUser,
+      hasOrg: !!org,
+      finalRedirect
+    })
 
     // Redirect to auth-success page which will set cookies client-side
     const authSuccessUrl = new URL('/auth-success', request.url)
