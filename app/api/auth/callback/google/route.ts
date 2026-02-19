@@ -121,36 +121,19 @@ export async function GET(request: NextRequest) {
       .single()
 
     // Redirect to signup if new user or no organization
-    const redirectUrl = isNewUser || !org ? '/signup?step=2' : '/dashboard'
-    console.log(`🔵 Redirecting to: ${redirectUrl}`)
+    const finalRedirect = isNewUser || !org ? '/signup?step=2' : '/dashboard'
+    console.log(`🔵 Final redirect: ${finalRedirect}`)
 
-    // Create session cookie
-    console.log('🔵 Setting cookies...')
+    // Redirect to auth-success page which will set cookies client-side
+    const authSuccessUrl = new URL('/auth-success', request.url)
+    authSuccessUrl.searchParams.set('user_id', userInfo.sub)
+    authSuccessUrl.searchParams.set('user_email', userInfo.email)
+    authSuccessUrl.searchParams.set('redirect', finalRedirect)
     
-    const response = NextResponse.redirect(new URL(redirectUrl, request.url))
-    
-    // Set cookies on the response
-    response.cookies.set('user_id', userInfo.sub, {
-      httpOnly: false, // Allow client-side access
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    })
-
-    response.cookies.set('user_email', userInfo.email, {
-      httpOnly: false, // Allow client-side access
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    })
-
-    // Clean up state cookie
+    const response = NextResponse.redirect(authSuccessUrl)
     response.cookies.delete('oauth_state')
 
-    console.log('✅ All done! Redirecting to dashboard...')
-    // Redirect to dashboard
+    console.log('✅ All done! Redirecting to auth-success page...')
     return response
   } catch (error) {
     console.error('❌ OAuth callback error:', error)

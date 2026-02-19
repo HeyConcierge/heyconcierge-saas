@@ -103,25 +103,15 @@ export async function GET(request: NextRequest) {
       .single()
 
     // Redirect to signup if new user or no organization
-    const redirectUrl = isNewUser || !org ? '/signup?step=2' : '/dashboard'
-    const response = NextResponse.redirect(new URL(redirectUrl, request.url))
+    const finalRedirect = isNewUser || !org ? '/signup?step=2' : '/dashboard'
     
-    response.cookies.set('user_id', userInfo.id, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    })
-
-    response.cookies.set('user_email', userInfo.email, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    })
-
+    // Redirect to auth-success page which will set cookies client-side
+    const authSuccessUrl = new URL('/auth-success', request.url)
+    authSuccessUrl.searchParams.set('user_id', userInfo.id)
+    authSuccessUrl.searchParams.set('user_email', userInfo.email)
+    authSuccessUrl.searchParams.set('redirect', finalRedirect)
+    
+    const response = NextResponse.redirect(authSuccessUrl)
     response.cookies.delete('oauth_state')
 
     return response

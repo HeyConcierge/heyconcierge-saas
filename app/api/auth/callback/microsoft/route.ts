@@ -99,40 +99,26 @@ export async function GET(request: NextRequest) {
       .single()
 
     // Redirect to signup if new user or no organization
-    const redirectUrl = isNewUser || !org ? '/signup?step=2' : '/dashboard'
+    const finalRedirect = isNewUser || !org ? '/signup?step=2' : '/dashboard'
     
     console.log('[Microsoft OAuth] User info:', {
       sub: userInfo.sub,
       email: userInfo.email,
       isNewUser,
       hasOrg: !!org,
-      redirectUrl
+      finalRedirect
     })
     
-    const response = NextResponse.redirect(new URL(redirectUrl, request.url))
+    // Redirect to auth-success page which will set cookies client-side
+    const authSuccessUrl = new URL('/auth-success', request.url)
+    authSuccessUrl.searchParams.set('user_id', userInfo.sub)
+    authSuccessUrl.searchParams.set('user_email', userInfo.email)
+    authSuccessUrl.searchParams.set('redirect', finalRedirect)
     
-    // Set cookies with explicit domain for localhost
-    response.cookies.set('user_id', userInfo.sub, {
-      httpOnly: false,
-      secure: false, // Explicitly false for localhost
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-      domain: undefined, // Let browser decide
-    })
-
-    response.cookies.set('user_email', userInfo.email, {
-      httpOnly: false,
-      secure: false, // Explicitly false for localhost
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-      domain: undefined, // Let browser decide
-    })
-
+    const response = NextResponse.redirect(authSuccessUrl)
     response.cookies.delete('oauth_state')
     
-    console.log('[Microsoft OAuth] Cookies set, redirecting to:', redirectUrl)
+    console.log('[Microsoft OAuth] Redirecting to auth-success page')
 
     return response
   } catch (error) {
