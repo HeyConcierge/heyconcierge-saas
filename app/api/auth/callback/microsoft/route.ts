@@ -16,9 +16,10 @@ interface MicrosoftTokenResponse {
 }
 
 interface MicrosoftUserInfo {
-  sub: string
-  email: string
-  name: string
+  id: string
+  mail?: string
+  userPrincipalName: string
+  displayName: string
   picture?: string
 }
 
@@ -90,20 +91,27 @@ export async function GET(request: NextRequest) {
     }
 
     const userInfo: MicrosoftUserInfo = await userInfoResponse.json()
+    
+    // Microsoft Graph API returns mail or userPrincipalName for email
+    const userEmail = userInfo.mail || userInfo.userPrincipalName
+    const userId = userInfo.id
+    const userName = userInfo.displayName
+
+    console.log('[Microsoft OAuth] Raw Graph API response:', userInfo)
 
     // Create or update user in Supabase
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
-      .eq('email', userInfo.email)
+      .eq('email', userEmail)
       .single()
 
     let isNewUser = false
     if (!existingUser) {
       await supabase.from('users').insert({
-        id: userInfo.sub,
-        email: userInfo.email,
-        name: userInfo.name,
+        id: userId,
+        email: userEmail,
+        name: userName,
         image: userInfo.picture || null,
       })
       isNewUser = true
@@ -113,16 +121,16 @@ export async function GET(request: NextRequest) {
     const { data: org } = await supabase
       .from('organizations')
       .select('id')
-      .eq('email', userInfo.email)
+      .eq('email', userEmail)
       .single()
 
     // Redirect to signup if new user or no organization (start at step 1 to pre-fill info)
     const finalRedirect = isNewUser || !org ? '/signup?step=1' : '/dashboard'
     
     console.log('[Microsoft OAuth] User info:', {
-      sub: userInfo.sub,
-      email: userInfo.email,
-      name: userInfo.name,
+      id: userId,
+      email: userEmail,
+      name: userName,
       isNewUser,
       hasOrg: !!org,
       finalRedirect
@@ -130,9 +138,9 @@ export async function GET(request: NextRequest) {
     
     // Redirect to auth-success page which will set cookies client-side
     const authSuccessUrl = new URL('/auth-success', request.url)
-    authSuccessUrl.searchParams.set('user_id', userInfo.sub)
-    authSuccessUrl.searchParams.set('user_email', userInfo.email)
-    authSuccessUrl.searchParams.set('user_name', userInfo.name)
+    authSuccessUrl.searchParams.set('user_id', userId)
+    authSuccessUrl.searchParams.set('user_email', userEmail)
+    authSuccessUrl.searchParams.set('user_name', userName)
     authSuccessUrl.searchParams.set('redirect', finalRedirect)
     
     const response = NextResponse.redirect(authSuccessUrl)
