@@ -179,7 +179,8 @@ function SignupPage() {
   useEffect(() => {
     const id = getCookie('user_id')
     const email = getCookie('user_email')
-    console.log('[Signup Page] Auth check:', { user_id: id, user_email: email })
+    const name = getCookie('user_name')
+    console.log('[Signup Page] Auth check:', { user_id: id, user_email: email, user_name: name })
     
     if (!id) {
       console.log('[Signup Page] No user_id cookie, redirecting to login')
@@ -188,6 +189,17 @@ function SignupPage() {
     }
     console.log('[Signup Page] User authenticated:', id)
     setUserId(id)
+    
+    // Pre-fill form with OAuth data
+    if (email && !form.email) {
+      console.log('[Signup Page] Pre-filling email from OAuth:', email)
+      update('email', email)
+    }
+    if (name && !form.name) {
+      const decodedName = decodeURIComponent(name)
+      console.log('[Signup Page] Pre-filling name from OAuth:', decodedName)
+      update('name', decodedName)
+    }
 
     // Check if user already has an org
     const checkExistingOrg = async () => {

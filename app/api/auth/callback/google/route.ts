@@ -120,14 +120,15 @@ export async function GET(request: NextRequest) {
       .eq('email', userInfo.email)
       .single()
 
-    // Redirect to signup if new user or no organization
-    const finalRedirect = isNewUser || !org ? '/signup?step=2' : '/dashboard'
+    // Redirect to signup if new user or no organization (start at step 1 to pre-fill info)
+    const finalRedirect = isNewUser || !org ? '/signup?step=1' : '/dashboard'
     console.log(`🔵 Final redirect: ${finalRedirect}`)
 
     // Redirect to auth-success page which will set cookies client-side
     const authSuccessUrl = new URL('/auth-success', request.url)
     authSuccessUrl.searchParams.set('user_id', userInfo.sub)
     authSuccessUrl.searchParams.set('user_email', userInfo.email)
+    authSuccessUrl.searchParams.set('user_name', userInfo.name)
     authSuccessUrl.searchParams.set('redirect', finalRedirect)
     
     const response = NextResponse.redirect(authSuccessUrl)

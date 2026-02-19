@@ -10,14 +10,18 @@ function AuthSuccessContent() {
   useEffect(() => {
     const userId = searchParams?.get('user_id')
     const userEmail = searchParams?.get('user_email')
-    const redirect = searchParams?.get('redirect') || '/signup?step=2'
+    const userName = searchParams?.get('user_name')
+    const redirect = searchParams?.get('redirect') || '/signup?step=1'
 
-    console.log('[Auth Success] Received:', { userId, userEmail, redirect })
+    console.log('[Auth Success] Received:', { userId, userEmail, userName, redirect })
 
     if (userId && userEmail) {
       // Set cookies client-side
       document.cookie = `user_id=${userId}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
       document.cookie = `user_email=${userEmail}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+      if (userName) {
+        document.cookie = `user_name=${encodeURIComponent(userName)}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+      }
       
       console.log('[Auth Success] Cookies set, redirecting to:', redirect)
       
