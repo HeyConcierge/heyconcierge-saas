@@ -96,10 +96,120 @@ function SignupPage() {
     const paramStep = searchParams?.get('step')
     if (sessionId && paramStep === '5') {
       // User returned from successful Stripe payment
-      // We're already on step 5, just need to complete the setup
-      setStep(5)
+      // Restore form data from localStorage
+      const savedForm = localStorage.getItem('heyconcierge_signup_form')
+      if (savedForm) {
+        try {
+          const parsedForm = JSON.parse(savedForm)
+          setForm(parsedForm)
+          localStorage.removeItem('heyconcierge_signup_form') // Clean up
+        } catch (e) {
+          console.error('Failed to restore form data:', e)
+        }
+      }
+      
+      setIsAddProperty(false) // Make sure we show the correct steps
+      setShouldCompleteSignup(true) // Trigger completion after form is restored
     }
   }, [router, searchParams])
+
+  // Complete signup after returning from Stripe (when form is restored)
+  useEffect(() => {
+    if (shouldCompleteSignup && form.propertyName) {
+      setShouldCompleteSignup(false)
+      completeSignupAfterPayment()
+    }
+  }, [shouldCompleteSignup, form.propertyName])
+
+  const completeSignupAfterPayment = async () => {
+    setLoading(true)
+    try {
+      const userEmail = getCookie('user_email')
+
+      // Use existing org or create new
+      let org: any = existingOrg
+
+      if (!org) {
+        const { data: foundOrg } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('email', userEmail || form.email)
+          .single()
+
+        if (foundOrg) {
+          await supabase
+            .from('organizations')
+            .update({ 
+              user_id: userId,
+              plan: form.plan,
+            })
+            .eq('id', foundOrg.id)
+          org = foundOrg
+        }
+      }
+
+      if (!org) {
+        const { data: newOrg, error: orgErr } = await supabase
+          .from('organizations')
+          .insert({ 
+            name: form.company || form.name, 
+            email: userEmail || form.email, 
+            plan: form.plan,
+            user_id: userId
+          })
+          .select()
+          .single()
+        if (orgErr) throw orgErr
+        org = newOrg
+      }
+
+      // Create property
+      const { data: prop, error: propErr } = await supabase
+        .from('properties')
+        .insert({ 
+          org_id: org.id, 
+          name: form.propertyName, 
+          address: form.propertyAddress,
+          postal_code: form.propertyPostalCode,
+          city: form.propertyCity,
+          country: form.propertyCountry,
+          property_type: form.propertyType,
+          images: form.propertyImages,
+          ical_url: form.icalUrl || null,
+          whatsapp_number: ''
+        })
+        .select()
+        .single()
+
+      if (propErr) throw propErr
+
+      // Create config sheet
+      await supabase
+        .from('property_config_sheets')
+        .insert({
+          property_id: prop.id,
+          wifi_password: form.wifi,
+          checkin_instructions: form.checkin,
+          local_tips: form.localTips,
+          house_rules: form.houseRules,
+        })
+
+      // Generate QR code
+      const QRCode = (await import('qrcode')).default
+      const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'HeyConciergeBot'
+      const qrUrl = `https://t.me/${botUsername}?start=${prop.id}`
+      const dataUrl = await QRCode.toDataURL(qrUrl, { width: 300, margin: 2, color: { dark: '#2D2B55', light: '#FFFFFF' } })
+      setQrDataUrl(dataUrl)
+      setLoading(false)
+      setStep(5)
+    } catch (err: any) {
+      console.error('Signup completion error:', err)
+      const msg = err?.message || err?.error_description || JSON.stringify(err)
+      alert(`Failed to complete setup: ${msg}`)
+      setLoading(false)
+      router.push('/signup?step=1') // Go back to start
+    }
+  }
 
   const [form, setForm] = useState({
     name: '', email: '', phone: '', 
@@ -125,6 +235,7 @@ function SignupPage() {
   
   const [showTestChat, setShowTestChat] = useState(false)
   const [creatingCheckout, setCreatingCheckout] = useState(false)
+  const [shouldCompleteSignup, setShouldCompleteSignup] = useState(false)
 
   const update = (field: string, value: string | boolean | any) => setForm(f => ({ ...f, [field]: value }))
 
@@ -215,6 +326,9 @@ function SignupPage() {
   const handleStripeCheckout = async () => {
     setCreatingCheckout(true)
     try {
+      // Save form data to localStorage before redirect
+      localStorage.setItem('heyconcierge_signup_form', JSON.stringify(form))
+      
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
