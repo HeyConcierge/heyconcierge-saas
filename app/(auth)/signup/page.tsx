@@ -119,6 +119,7 @@ function SignupPage() {
       setShouldCompleteSignup(false)
       completeSignupAfterPayment()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldCompleteSignup, form.propertyName])
 
   const completeSignupAfterPayment = async () => {
