@@ -71,14 +71,22 @@ export async function GET(request: NextRequest) {
     }
 
     const tokens: MicrosoftTokenResponse = await tokenResponse.json()
+    console.log('[Microsoft OAuth] Got tokens successfully')
 
     // Get user info from Microsoft Graph
+    console.log('[Microsoft OAuth] Fetching user info from Graph API...')
     const userInfoResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     })
 
     if (!userInfoResponse.ok) {
-      throw new Error('Failed to fetch user info')
+      const errorText = await userInfoResponse.text()
+      console.error('[Microsoft OAuth] Graph API error:', {
+        status: userInfoResponse.status,
+        statusText: userInfoResponse.statusText,
+        error: errorText
+      })
+      throw new Error(`Failed to fetch user info: ${errorText}`)
     }
 
     const userInfo: MicrosoftUserInfo = await userInfoResponse.json()

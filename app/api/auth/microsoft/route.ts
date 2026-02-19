@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     client_id: MICROSOFT_CLIENT_ID,
     redirect_uri: redirectUri,
     response_type: 'code',
-    scope: 'openid email profile',
+    scope: 'openid email profile User.Read',
     state,
     response_mode: 'query',
   })
