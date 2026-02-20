@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-01-28.clover',
-})
+export const dynamic = 'force-dynamic'
+
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2026-01-28.clover' as any,
+  })
+}
 
 // Plan pricing (in cents)
 const PLAN_PRICES = {
@@ -30,7 +34,7 @@ export async function POST(request: NextRequest) {
     const planName = PLAN_NAMES[plan as keyof typeof PLAN_NAMES]
 
     // Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       customer_email: email || undefined,
       payment_method_types: ['card'],
       line_items: [

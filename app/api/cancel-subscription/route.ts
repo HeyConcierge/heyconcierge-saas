@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-01-28.clover',
-})
+export const dynamic = 'force-dynamic'
+
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2026-01-28.clover' as any,
+  })
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get all active subscriptions for this customer
-    const subscriptions = await stripe.subscriptions.list({
+    const subscriptions = await getStripe().subscriptions.list({
       customer: customerId,
       status: 'active',
       limit: 10,
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     if (subscriptions.data.length === 0) {
       // Also check for trialing subscriptions
-      const trialingSubscriptions = await stripe.subscriptions.list({
+      const trialingSubscriptions = await getStripe().subscriptions.list({
         customer: customerId,
         status: 'trialing',
         limit: 10,
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
 
       // Cancel trialing subscription
       const subscription = trialingSubscriptions.data[0]
-      await stripe.subscriptions.cancel(subscription.id)
+      await getStripe().subscriptions.cancel(subscription.id)
 
       // Update organization status
       await supabase
@@ -65,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Cancel the subscription at period end (user keeps access until paid period ends)
     const subscription = subscriptions.data[0]
-    const cancelledSubscription = await stripe.subscriptions.update(subscription.id, {
+    const cancelledSubscription = await getStripe().subscriptions.update(subscription.id, {
       cancel_at_period_end: true,
     })
 
