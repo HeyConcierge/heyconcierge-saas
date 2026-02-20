@@ -47,7 +47,7 @@ export async function PATCH(
     const stripe = getStripe()
 
     // Helper: get active subscription for this customer
-    async function getSubscription() {
+    const getSubscription = async () => {
       if (!org.stripe_customer_id) return null
 
       const subs = await stripe.subscriptions.list({
