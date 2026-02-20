@@ -112,6 +112,7 @@ export default function PropertyViewPage() {
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="text-sm text-muted hover:text-dark font-bold">← Dashboard</Link>
+            <Link href="/upselling" className="text-sm text-dark hover:text-primary font-bold">💰 Upselling</Link>
             <span className="text-sm text-muted">{userEmail}</span>
             <button onClick={handleLogout} className="text-sm text-muted hover:text-dark font-bold">
               Logout

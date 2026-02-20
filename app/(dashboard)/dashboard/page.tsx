@@ -194,6 +194,9 @@ export default function DashboardPage() {
             <Link href="/calendar" className="text-xs sm:text-sm text-dark hover:text-primary font-bold whitespace-nowrap">
               📅 <span className="hidden sm:inline">Calendar</span>
             </Link>
+            <Link href="/upselling" className="text-xs sm:text-sm text-dark hover:text-primary font-bold whitespace-nowrap">
+              💰 <span className="hidden sm:inline">Upselling</span>
+            </Link>
             <Link href="/billing" className="text-xs sm:text-sm text-dark hover:text-primary font-bold whitespace-nowrap">
               💳 <span className="hidden sm:inline">Billing</span>
             </Link>
