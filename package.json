@@ -6,11 +6,13 @@
     "dev": "next dev",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "email:dev": "email dev --dir emails --port 3002"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
     "@stripe/stripe-js": "^8.7.0",
+    "@react-email/components": "^1.0.8",
     "@supabase/supabase-js": "^2.39.0",
     "bcryptjs": "^3.0.3",
     "docx": "^9.5.3",
@@ -21,7 +23,9 @@
     "qrcode": "^1.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-email": "^5.2.8",
     "react-markdown": "^10.1.0",
+    "resend": "^6.9.2",
     "stripe": "^20.3.1"
   },
   "devDependencies": {
