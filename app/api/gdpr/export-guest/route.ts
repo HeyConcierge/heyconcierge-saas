@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+export const dynamic = 'force-dynamic'
+
 // GDPR Article 15 & 20 — Right of Access + Data Portability
 // Returns all personal data held for a guest as JSON.
 // Used to fulfill Subject Access Requests (SARs).
