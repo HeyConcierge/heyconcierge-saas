@@ -411,9 +411,12 @@ function SignupPage() {
           if (foundOrg) {
             await supabase
               .from('organizations')
-              .update({ 
+              .update({
                 user_id: userId, auth_user_id: userId,
                 plan: form.plan,
+                subscription_status: 'trialing',
+                trial_started_at: new Date().toISOString(),
+                trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
               })
               .eq('id', foundOrg.id)
             org = foundOrg
@@ -423,11 +426,15 @@ function SignupPage() {
         if (!org) {
           const { data: newOrg, error: orgErr } = await supabase
             .from('organizations')
-            .insert({ 
-              name: form.company || form.name, 
-              email: userEmail || form.email, 
+            .insert({
+              name: form.company || form.name,
+              email: userEmail || form.email,
               plan: form.plan,
-              user_id: userId
+              user_id: userId,
+              auth_user_id: userId,
+              subscription_status: 'trialing',
+              trial_started_at: new Date().toISOString(),
+              trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
             })
             .select()
             .single()
