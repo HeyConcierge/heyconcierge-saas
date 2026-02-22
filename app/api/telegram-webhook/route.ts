@@ -184,6 +184,24 @@ export async function POST(request: NextRequest) {
       .update({ updated_at: new Date().toISOString() })
       .eq('telegram_chat_id', chatId)
 
+    // Check if this is an upsell response (YES/NO/JA/SI etc.)
+    const { handleUpsellResponse } = await import('@/lib/upsell')
+    const guestPhone = `tg:${chatId}`
+    const upsellReply = await handleUpsellResponse(supabase, guestPhone, text)
+    if (upsellReply) {
+      await sendMessage(chatId, upsellReply)
+      // Log the upsell conversation
+      try {
+        await supabase.from('goconcierge_messages').insert([
+          { property_id: session.property_id, guest_phone: guestPhone, guest_name: firstName, role: 'user', content: text, channel: 'telegram' },
+          { property_id: session.property_id, guest_phone: guestPhone, guest_name: firstName, role: 'assistant', content: upsellReply, channel: 'telegram' },
+        ])
+      } catch (logErr) {
+        console.error('Failed to log upsell conversation:', logErr)
+      }
+      return NextResponse.json({ ok: true })
+    }
+
     // Load property + config
     const { data: property, error: propErr } = await supabase
       .from('properties')

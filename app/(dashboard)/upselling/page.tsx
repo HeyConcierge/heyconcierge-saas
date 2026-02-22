@@ -450,7 +450,7 @@ function UpsellPage() {
             <div className="text-6xl mb-4">💰</div>
             <h2 className="font-nunito text-2xl font-black mb-2">No properties yet</h2>
             <p className="text-muted mb-6">Add a property first to start upselling</p>
-            <Link href="/signup?step=3" className="bg-primary text-white px-6 py-3 rounded-full font-bold no-underline hover:-translate-y-0.5 transition-all">
+            <Link href="/property/new" className="bg-primary text-white px-6 py-3 rounded-full font-bold no-underline hover:-translate-y-0.5 transition-all">
               + Add Property
             </Link>
           </div>

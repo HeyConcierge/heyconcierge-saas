@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
       await supabase.from('property_images').delete().eq('property_id', propertyId)
     }
 
+    await supabase.from('upsell_offers').delete().eq('property_id', propertyId)
+    await supabase.from('upsell_configs').delete().eq('property_id', propertyId)
     await supabase.from('property_config_sheets').delete().eq('property_id', propertyId)
     await supabase.from('bookings').delete().eq('property_id', propertyId)
     await supabase.from('guest_sessions').delete().eq('property_id', propertyId)
