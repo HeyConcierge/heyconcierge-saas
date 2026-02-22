@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
 interface ParsedEvent {
   summary: string
@@ -110,6 +112,7 @@ function extractBookings(events: ParsedEvent[], propertyId: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabase()
     // Get all properties with iCal URLs
     const { data: properties, error: fetchError } = await supabase
       .from('properties')

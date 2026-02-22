@@ -4,10 +4,12 @@ import Anthropic from '@anthropic-ai/sdk'
 
 export const maxDuration = 30
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
 const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`
 
@@ -59,20 +61,21 @@ ${config.house_rules || 'Not provided'}`
 
 // --- Image auto-attach (mirrors backend/whatsapp_server.js) ---
 
-async function autoAttachImages(chatId: number, guestMessage: string, aiReply: string, propertyId: string) {
+async function autoAttachImages(chatId: number, guestMessage: string, aiReply: string, propertyId: string, supabase: ReturnType<typeof getSupabase>) {
   try {
-    const { data: images } = await supabase
+    const { data } = await supabase
       .from('property_images')
       .select('url, tags')
       .eq('property_id', propertyId)
 
+    const images = data as { url: string; tags: string[] | null }[] | null
     if (!images || images.length === 0) return
 
     const combinedText = (guestMessage + ' ' + aiReply).toLowerCase()
     let imagesToSend: { url: string }[] = []
 
     if (/key\s*box|nøkkel|inngang|entry|check.?in|how to (get|enter)|hvordan komme|schlüssel|eingang|llave|entrada/i.test(combinedText)) {
-      imagesToSend = images.filter(img => img.tags?.some((t: string) => ['entry', 'keybox', 'checkin'].includes(t))).slice(0, 4)
+      imagesToSend = images.filter(img => img.tags?.some(t => ['entry', 'keybox', 'checkin'].includes(t))).slice(0, 4)
     } else if (/parking|parkering|parken|aparcamiento|where (do i|can i) park/i.test(combinedText)) {
       imagesToSend = images.filter(img => img.tags?.includes('parking')).slice(0, 2)
     } else if (/view|utsikt|vista|aussicht/i.test(combinedText)) {
@@ -97,6 +100,8 @@ export async function POST(request: NextRequest) {
   if (process.env.TELEGRAM_WEBHOOK_SECRET && secret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const supabase = getSupabase()
 
   try {
     const update = await request.json()
@@ -279,7 +284,7 @@ ${propertyContext}`
     await sendMessage(chatId, reply)
 
     // Auto-attach images
-    await autoAttachImages(chatId, text, reply, property.id)
+    await autoAttachImages(chatId, text, reply, property.id, supabase)
 
     // Log conversation (user message + assistant reply as separate rows)
     try {
