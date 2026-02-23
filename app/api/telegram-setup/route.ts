@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth/require-auth'
 
 export async function POST(request: NextRequest) {
   try {
+    const { user } = await requireAuth()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const token = process.env.TELEGRAM_BOT_TOKEN
     if (!token) {
       return NextResponse.json({ error: 'TELEGRAM_BOT_TOKEN not configured' }, { status: 500 })

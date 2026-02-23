@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { requireAuth } from '@/lib/auth/require-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
 // GDPR Article 15 & 20 — Right of Access + Data Portability
 // Returns all personal data held for a guest as JSON.
-// Used to fulfill Subject Access Requests (SARs).
+// Requires authenticated user who owns the property.
 
 export async function GET(request: NextRequest) {
   try {
+    const { user, org } = await requireAuth()
+    if (!user || !org) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = request.nextUrl
     const phone = searchParams.get('phone')
     const telegram_chat_id = searchParams.get('telegram_chat_id')
@@ -21,10 +27,25 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    if (!property_id) {
+      return NextResponse.json(
+        { error: 'Must provide property_id' },
+        { status: 400 }
+      )
+    }
+
+    // Verify user owns this property
+    const supabase = createAdminClient()
+    const { data: property } = await supabase
+      .from('properties')
+      .select('id')
+      .eq('id', property_id)
+      .eq('organization_id', org.id)
+      .single()
+
+    if (!property) {
+      return NextResponse.json({ error: 'Property not found or access denied' }, { status: 403 })
+    }
 
     const data: Record<string, unknown> = {
       exported_at: new Date().toISOString(),
@@ -32,27 +53,26 @@ export async function GET(request: NextRequest) {
     }
 
     if (phone) {
-      const query = supabase
+      const { data: messages } = await supabase
         .from('goconcierge_messages')
         .select('role, content, channel, created_at')
         .eq('guest_phone', phone)
+        .eq('property_id', property_id)
         .order('created_at', { ascending: true })
-
-      if (property_id) query.eq('property_id', property_id)
-
-      const { data: messages } = await query
       data.messages = messages || []
 
       const { data: sessions } = await supabase
         .from('guest_sessions')
         .select('property_id, created_at, last_message_at')
         .eq('phone', phone)
+        .eq('property_id', property_id)
       data.sessions = sessions || []
 
       const { data: escalations } = await supabase
         .from('escalations')
         .select('message, ai_response, reason, status, created_at')
         .eq('guest_phone', phone)
+        .eq('property_id', property_id)
       data.escalations = escalations || []
     }
 
@@ -62,6 +82,7 @@ export async function GET(request: NextRequest) {
         .from('goconcierge_messages')
         .select('role, content, channel, created_at')
         .eq('guest_phone', tgPhone)
+        .eq('property_id', property_id)
         .order('created_at', { ascending: true })
       data.telegram_messages = messages || []
     }

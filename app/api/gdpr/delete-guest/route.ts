@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { requireAuth } from '@/lib/auth/require-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // GDPR Article 17 — Right to Erasure
 // Deletes all personal data for a guest identified by phone or Telegram chat ID.
-// Must be called by the host (property owner) or admin — verify ownership.
+// Requires authenticated user who owns the property.
 
 export async function POST(request: NextRequest) {
   try {
+    const { user, org } = await requireAuth()
+    if (!user || !org) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { phone, telegram_chat_id, property_id } = await request.json()
 
     if (!phone && !telegram_chat_id) {
@@ -16,10 +22,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    if (!property_id) {
+      return NextResponse.json(
+        { error: 'Must provide property_id' },
+        { status: 400 }
+      )
+    }
+
+    // Verify user owns this property
+    const supabase = createAdminClient()
+    const { data: property } = await supabase
+      .from('properties')
+      .select('id')
+      .eq('id', property_id)
+      .eq('organization_id', org.id)
+      .single()
+
+    if (!property) {
+      return NextResponse.json({ error: 'Property not found or access denied' }, { status: 403 })
+    }
 
     const deleted: Record<string, number> = {}
 
@@ -56,12 +77,14 @@ export async function POST(request: NextRequest) {
         .from('goconcierge_messages')
         .delete({ count: 'exact' })
         .eq('guest_phone', tgPhone)
+        .eq('property_id', property_id)
       deleted.telegram_messages = msgCount || 0
 
       const { count: sessionCount } = await supabase
         .from('guest_sessions')
         .delete({ count: 'exact' })
         .eq('telegram_chat_id', telegram_chat_id)
+        .eq('property_id', property_id)
       deleted.telegram_sessions = sessionCount || 0
     }
 

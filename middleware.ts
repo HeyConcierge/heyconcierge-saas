@@ -65,9 +65,7 @@ export async function middleware(request: NextRequest) {
     '/api/auth',
     '/api/admin',
     '/api/telegram-webhook',
-    '/api/telegram-setup',
-    '/api/test-concierge',
-    '/api/gdpr',
+    '/api/cron',
   ]
   const isPublicApi = publicApiPaths.some(path => pathname.startsWith(path))
 
