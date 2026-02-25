@@ -7,6 +7,7 @@ import {
   Building2,
   Users,
   HeadphonesIcon,
+  MessageSquare,
   LogOut,
 } from 'lucide-react'
 
@@ -25,6 +26,7 @@ const navItems = [
   { href: '/admin/customers', label: 'Customers', icon: Building2 },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/support', label: 'Support', icon: HeadphonesIcon },
+  { href: '/chats', label: 'Chats', icon: MessageSquare },
 ]
 
 const roleColors: Record<string, string> = {
