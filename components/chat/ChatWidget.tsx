@@ -38,7 +38,8 @@ export default function ChatWidget() {
         const response = await fetch(`/api/chat/${chatId}`)
         if (response.ok) {
           const data = await response.json()
-          if (data.messages && data.messages.length > messages.length) {
+          if (data.messages && data.messages.length >= messages.length) {
+            // Always update to get latest messages (including team replies)
             setMessages(data.messages)
           }
         }
@@ -48,7 +49,7 @@ export default function ChatWidget() {
     }, 5000) // Poll every 5 seconds
 
     return () => clearInterval(pollInterval)
-  }, [chatId, messages.length])
+  }, [chatId])
 
   useEffect(() => {
     // Check if chat ID exists in localStorage
