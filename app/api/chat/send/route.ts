@@ -136,83 +136,29 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Check if should escalate
-    const needsEscalation = shouldEscalate(message)
+    // TEMPORARY: Skip AI, always escalate to human
+    // Update chat status
+    await supabase
+      .from('chats')
+      .update({ status: 'escalated', escalated_at: new Date().toISOString() })
+      .eq('id', finalChatId)
 
-    if (needsEscalation) {
-      // Update chat status
-      await supabase
-        .from('chats')
-        .update({ status: 'escalated', escalated_at: new Date().toISOString() })
-        .eq('id', finalChatId)
+    // Send Telegram notification
+    await sendTelegramNotification(finalChatId, message, userEmail, userName)
 
-      // Send Telegram notification
-      await sendTelegramNotification(finalChatId, message, userEmail, userName)
+    // Save welcome message
+    const welcomeMessage = "Thanks for your message! Our team will respond shortly. 😊"
+    await supabase.from('messages').insert({
+      chat_id: finalChatId,
+      sender_type: 'ai',
+      content: welcomeMessage
+    })
 
-      // Save escalation message
-      await supabase.from('messages').insert({
-        chat_id: finalChatId,
-        sender_type: 'ai',
-        content: "I'll connect you with our team right away! They'll respond shortly. 😊"
-      })
-
-      return NextResponse.json({
-        chatId: finalChatId,
-        reply: "I'll connect you with our team right away! They'll respond shortly. 😊",
-        escalated: true
-      })
-    }
-
-    // Get AI response
-    try {
-      const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-latest',
-        max_tokens: 500,
-        system: KNOWLEDGE_BASE,
-        messages: [
-          {
-            role: 'user',
-            content: message
-          }
-        ]
-      })
-
-      const aiReply = response.content[0].type === 'text' 
-        ? response.content[0].text 
-        : 'Sorry, I had trouble processing that. Can you rephrase?'
-
-      // Save AI response
-      await supabase.from('messages').insert({
-        chat_id: finalChatId,
-        sender_type: 'ai',
-        content: aiReply
-      })
-
-      return NextResponse.json({
-        chatId: finalChatId,
-        reply: aiReply,
-        escalated: false
-      })
-    } catch (aiError) {
-      console.error('AI response error:', aiError)
-      
-      // Fallback response
-      const fallbackReply = "I'm having a bit of trouble right now. Our team has been notified and will help you shortly!"
-      
-      // Escalate on AI failure
-      await supabase
-        .from('chats')
-        .update({ status: 'escalated', escalated_at: new Date().toISOString() })
-        .eq('id', finalChatId)
-
-      await sendTelegramNotification(finalChatId, message, userEmail, userName)
-
-      return NextResponse.json({
-        chatId: finalChatId,
-        reply: fallbackReply,
-        escalated: true
-      })
-    }
+    return NextResponse.json({
+      chatId: finalChatId,
+      reply: welcomeMessage,
+      escalated: true
+    })
   } catch (error) {
     console.error('Send message error:', error)
     return NextResponse.json(
