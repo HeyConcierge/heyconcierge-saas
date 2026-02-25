@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import LogoSVG from '@/components/brand/LogoSVG'
 import { createClient } from '@/lib/supabase/client'
+import PWAInstallPrompt from '@/components/PWAInstallPrompt'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -308,6 +309,7 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      <PWAInstallPrompt />
     </div>
   )
 }
