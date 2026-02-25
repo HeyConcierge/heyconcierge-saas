@@ -29,6 +29,27 @@ export default function ChatWidget() {
     scrollToBottom()
   }, [messages])
 
+  // Poll for new messages from team every 5 seconds
+  useEffect(() => {
+    if (!chatId) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/chat/${chatId}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.messages && data.messages.length > messages.length) {
+            setMessages(data.messages)
+          }
+        }
+      } catch (error) {
+        console.error('Poll error:', error)
+      }
+    }, 5000) // Poll every 5 seconds
+
+    return () => clearInterval(pollInterval)
+  }, [chatId, messages.length])
+
   useEffect(() => {
     // Check if chat ID exists in localStorage
     const savedChatId = localStorage.getItem('heyconcierge_chat_id')
