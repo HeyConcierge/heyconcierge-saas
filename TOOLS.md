@@ -4,7 +4,7 @@ Skills define _how_ tools work. This file is for _your_ specifics — the stuff 
 
 ## Twitter / X
 
-- **Account:** @miyamotolabs (Miyamoto Labs)
+### @miyamotolabs (Miyamoto Labs)
 - **User ID:** 2018603165633912832
 - **Console:** console.x.com (pay-per-use, $4.99 credits)
 - **API Credentials:**
@@ -24,6 +24,24 @@ Skills define _how_ tools work. This file is for _your_ specifics — the stuff 
   - Engagement bot every 4 hours (searches trending crypto, replies thoughtfully, likes quality posts)
 - **Model:** DeepSeek (ultra-cheap, good for content + market analysis)
 - **Engagement Strategy:** Moderate (5 replies, 8 likes per 4h run, quality-filtered)
+
+### @easypoly_lol (EasyPoly Product Account)
+- **Status:** ✅ ACTIVE (created 2026-02-21, posted 2026-02-21)
+- **Purpose:** Polymarket insights + EasyPoly product updates
+- **API Credentials (OAuth 1.0a):**
+  - **API Key:** `oCaRpV7U748EY3uCuoqqrCfDM`
+  - **API Secret:** `CaHW3fqk4Yl8CmExfqlMz0MUfwu1hECMMxdJMB19BRVhoaRnsN`
+  - **Access Token:** `2022844365521989634-R3EQlpHZzz5pdWd8fM6WSjmynOMSLz`
+  - **Access Token Secret:** `lpby11mV7il5iQYQvJYtEecExph2tyruUswa0yUAfxkb2`
+- **Bio:** "AI that finds mispriced Polymarket predictions. Swipe right on winners 📈 | Beta: DM for access | Built by @miyamotolabs"
+- **Content Strategy:**
+  - 40% Polymarket market insights
+  - 30% EasyPoly product updates
+  - 20% Community engagement
+  - 10% Behind-the-scenes
+- **Posting:** Autonomous (Miyamoto controls, Erik approves major announcements)
+- **Frequency:** 2-3 tweets/day + active replies
+- **Script:** `/Users/erik/.openclaw/workspace/easypoly_twitter_bot.py`
 
 ## Gmail
 
@@ -93,6 +111,20 @@ Skills define _how_ tools work. This file is for _your_ specifics — the stuff 
 - **Capabilities:** Token prices, wallet balances, transactions, historical data, custom SQL
 - **Citation:** Always end with "Powered by Allium"
 
+## MoonPay (Crypto Trading)
+
+- **Account:** dostoyevskyai@gmail.com
+- **Wallet Name:** main
+- **CLI:** `mp` (v0.6.29)
+- **Docs:** `MOONPAY_WALLET.md`
+- **Status:** ✅ Active (logged in, wallet created)
+- **Capabilities:** Swaps, bridges, transfers, DCA, limit orders, market data, fiat on-ramp
+- **Addresses:**
+  - Solana: `HvN582j33CkooH5f45DHHsCuiWXq9fiS7cGxegwzHReU`
+  - EVM: `0x653753e3438d10DB34E92ed3A7570fB0541A2A17` (all EVM chains)
+  - Bitcoin: `bc1q3tsd9he6xzq2suaej99ghaz6snlhp78j7vdd5n`
+  - TRON: `TA24SVs7GTh4gaNi2jFUwHVR4d2U254WyN`
+
 ## Bankr (Crypto Trading Agent API)
 
 - **Account:** dostoyevskyai@gmail.com
@@ -122,6 +154,13 @@ Skills define _how_ tools work. This file is for _your_ specifics — the stuff 
 ---
 
 Add whatever helps you do your job. This is your cheat sheet.
+
+## Discord
+
+- **Channel:** #easapoly-project (ID: 1471775303788527769)
+- **Purpose:** EasyPoly.io (Polymarket site) discussions and development
+- **Guild/Space ID:** 1471774930134634519
+- **Status:** Active ✅
 
 ## Miyamoto Studio - Narrator Voice
 
