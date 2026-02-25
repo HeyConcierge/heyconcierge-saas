@@ -7,6 +7,7 @@ import LogoSVG from '@/components/brand/LogoSVG'
 import AnimatedMascot from '@/components/brand/AnimatedMascot'
 import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
+import PhotoUpload from '@/components/PhotoUpload'
 
 const TestConcierge = dynamic(() => import('@/components/features/TestConcierge'), { ssr: false })
 
@@ -330,42 +331,12 @@ function NewPropertyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-dark mb-1.5">Property Photos</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={async (e) => {
-                    const files = Array.from(e.target.files || [])
-                    const urls: string[] = []
-                    for (const file of files) {
-                      const reader = new FileReader()
-                      const url = await new Promise<string>((resolve) => {
-                        reader.onload = () => resolve(reader.result as string)
-                        reader.readAsDataURL(file)
-                      })
-                      urls.push(url)
-                    }
-                    setForm(f => ({ ...f, propertyImages: [...f.propertyImages, ...urls] }))
-                  }}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#E8E4FF] bg-white text-dark font-medium focus:border-primary focus:outline-none transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-[#5847D9]"
+                <label className="block text-sm font-bold text-dark mb-1.5">Property Photos (Optional)</label>
+                <PhotoUpload
+                  onPhotosUploaded={(urls) => update('propertyImages', urls)}
+                  existingPhotos={form.propertyImages}
+                  maxPhotos={10}
                 />
-                {form.propertyImages.length > 0 && (
-                  <div className="flex gap-2 mt-3 flex-wrap">
-                    {form.propertyImages.map((img, i) => (
-                      <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-[#E8E4FF]">
-                        <img src={img} alt={`Property ${i + 1}`} className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => setForm(f => ({ ...f, propertyImages: f.propertyImages.filter((_, idx) => idx !== i) }))}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold hover:bg-red-600"
-                        >
-                          x
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <p className="text-xs text-muted mt-2">Upload up to 10 photos of your property</p>
               </div>
             </div>
           </div>
