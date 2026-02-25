@@ -1,11 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import CookieBanner from '@/components/ui/CookieBanner'
-import dynamic from 'next/dynamic'
-
-const ChatWidget = dynamic(() => import('@/components/chat/ChatWidget'), {
-  ssr: false,
-})
 
 export const metadata: Metadata = {
   title: 'HeyConcierge — Your Friendly AI Concierge',
@@ -35,7 +30,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-quicksand">
         {children}
         <CookieBanner />
-        <ChatWidget />
       </body>
     </html>
   )
