@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!
-})
+function getAnthropic() {
+  return new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY!
+  })
+}
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_CHAT_SUPPORT_BOT_TOKEN
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_SUPPORT_CHAT_ID
@@ -136,28 +138,65 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // TEMPORARY: Skip AI, always escalate to human
-    // Update chat status
-    await supabase
-      .from('chats')
-      .update({ status: 'escalated', escalated_at: new Date().toISOString() })
-      .eq('id', finalChatId)
+    // Check if message should be escalated to human
+    if (shouldEscalate(message)) {
+      await supabase
+        .from('chats')
+        .update({ status: 'escalated', escalated_at: new Date().toISOString() })
+        .eq('id', finalChatId)
 
-    // Send Telegram notification
-    await sendTelegramNotification(finalChatId, message, userEmail, userName)
+      await sendTelegramNotification(finalChatId, message, userEmail, userName)
 
-    // Save welcome message
-    const welcomeMessage = "Thanks for your message! Our team will respond shortly. 😊"
+      const escalationReply = "I'm connecting you with our team — someone will be with you shortly! 😊"
+      await supabase.from('messages').insert({
+        chat_id: finalChatId,
+        sender_type: 'ai',
+        content: escalationReply
+      })
+
+      return NextResponse.json({
+        chatId: finalChatId,
+        reply: escalationReply,
+        escalated: true
+      })
+    }
+
+    // Get conversation history for context
+    const { data: history } = await supabase
+      .from('messages')
+      .select('sender_type, content')
+      .eq('chat_id', finalChatId)
+      .order('created_at', { ascending: true })
+      .limit(20)
+
+    const conversationMessages = (history || []).map(msg => ({
+      role: msg.sender_type === 'user' ? 'user' as const : 'assistant' as const,
+      content: msg.content
+    }))
+
+    // Call Claude API
+    const aiResponse = await getAnthropic().messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      system: KNOWLEDGE_BASE,
+      messages: conversationMessages
+    })
+
+    const aiReply = aiResponse.content[0].type === 'text'
+      ? aiResponse.content[0].text
+      : 'Sorry, I couldn\'t generate a response. Please try again.'
+
+    // Save AI reply
     await supabase.from('messages').insert({
       chat_id: finalChatId,
       sender_type: 'ai',
-      content: welcomeMessage
+      content: aiReply
     })
 
     return NextResponse.json({
       chatId: finalChatId,
-      reply: welcomeMessage,
-      escalated: true
+      reply: aiReply,
+      escalated: false
     })
   } catch (error) {
     console.error('Send message error:', error)
