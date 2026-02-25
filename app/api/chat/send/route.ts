@@ -6,8 +6,8 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!
 })
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_CHAT_SUPPORT_BOT_TOKEN
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_SUPPORT_CHAT_ID
 
 const KNOWLEDGE_BASE = `
 You are a helpful customer support assistant for HeyConcierge, an AI-powered guest concierge service for vacation rentals.
