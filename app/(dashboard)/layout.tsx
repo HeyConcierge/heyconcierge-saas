@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import CookieSettingsLink from '@/components/ui/CookieSettingsLink'
+import ChatWidget from '@/components/chat/SimpleChatWidget'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex-1">
         {children}
       </div>
+      <ChatWidget />
       <footer className="border-t border-[rgba(108,92,231,0.1)] py-5 px-8 mt-8">
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-[0.8rem] text-[rgba(45,43,85,0.4)]">
