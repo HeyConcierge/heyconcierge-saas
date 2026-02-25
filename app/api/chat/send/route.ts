@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!
-})
+function getAnthropic() {
+  return new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY!
+  })
+}
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_CHAT_SUPPORT_BOT_TOKEN
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_SUPPORT_CHAT_ID
@@ -34,15 +36,18 @@ INTEGRATION:
 - Simple setup - 5 minutes to get started
 - Works with Airbnb, Booking.com, VRBO, direct bookings
 
-ESCALATION TRIGGERS:
-Escalate to human if the user:
-- Says "talk to human", "speak to someone", "real person"
-- Has billing/payment questions
-- Has complex technical issues
-- Seems frustrated or unsatisfied
-- Asks about custom enterprise features
+ESCALATION:
+If you cannot confidently answer a question, or the user needs human help, include the exact tag [ESCALATE] at the very end of your response (after your message to the user). Do this when:
+- You don't know the answer or it's outside your knowledge base
+- The user asks about their specific account, billing, or payment details
+- The user has a complex technical issue you can't resolve
+- The user explicitly asks for a human or real person
+- The user seems frustrated or unsatisfied with your answers
 
-Always be friendly, concise, and helpful. Use emojis sparingly.
+When escalating, give a brief helpful response first, then add [ESCALATE] at the end.
+If you CAN answer confidently, do NOT include [ESCALATE].
+
+Always be friendly, concise, and helpful. Use emojis sparingly. Keep responses under 3 sentences when possible.
 `
 
 async function sendTelegramNotification(chatId: string, message: string, userEmail?: string, userName?: string) {
@@ -136,28 +141,93 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // TEMPORARY: Skip AI, always escalate to human
-    // Update chat status
-    await supabase
-      .from('chats')
-      .update({ status: 'escalated', escalated_at: new Date().toISOString() })
-      .eq('id', finalChatId)
+    // Check if message should be escalated to human
+    if (shouldEscalate(message)) {
+      await supabase
+        .from('chats')
+        .update({ status: 'escalated', escalated_at: new Date().toISOString() })
+        .eq('id', finalChatId)
 
-    // Send Telegram notification
-    await sendTelegramNotification(finalChatId, message, userEmail, userName)
+      await sendTelegramNotification(finalChatId, message, userEmail, userName)
 
-    // Save welcome message
-    const welcomeMessage = "Thanks for your message! Our team will respond shortly. 😊"
+      const escalationReply = "I'm connecting you with our team — someone will be with you shortly! 😊"
+      await supabase.from('messages').insert({
+        chat_id: finalChatId,
+        sender_type: 'ai',
+        content: escalationReply
+      })
+
+      return NextResponse.json({
+        chatId: finalChatId,
+        reply: escalationReply,
+        escalated: true
+      })
+    }
+
+    // Get conversation history for context
+    const { data: history } = await supabase
+      .from('messages')
+      .select('sender_type, content')
+      .eq('chat_id', finalChatId)
+      .order('created_at', { ascending: true })
+      .limit(20)
+
+    const conversationMessages = (history || []).map(msg => ({
+      role: msg.sender_type === 'user' ? 'user' as const : 'assistant' as const,
+      content: msg.content
+    }))
+
+    // Call Claude API
+    const aiResponse = await getAnthropic().messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      system: KNOWLEDGE_BASE,
+      messages: conversationMessages
+    })
+
+    let aiReply = aiResponse.content[0].type === 'text'
+      ? aiResponse.content[0].text
+      : 'Sorry, I couldn\'t generate a response. Please try again.'
+
+    // Check if AI wants to escalate
+    const aiWantsEscalation = aiReply.includes('[ESCALATE]')
+    aiReply = aiReply.replace('[ESCALATE]', '').trim()
+
+    // Save AI reply
     await supabase.from('messages').insert({
       chat_id: finalChatId,
       sender_type: 'ai',
-      content: welcomeMessage
+      content: aiReply
     })
+
+    // If AI flagged escalation, hand off to human
+    if (aiWantsEscalation) {
+      await supabase
+        .from('chats')
+        .update({ status: 'escalated', escalated_at: new Date().toISOString() })
+        .eq('id', finalChatId)
+
+      await sendTelegramNotification(finalChatId, message, userEmail, userName)
+
+      // Add handoff message after the AI's response
+      const handoffMessage = "I've connected you with our team — a real person will follow up shortly!"
+      await supabase.from('messages').insert({
+        chat_id: finalChatId,
+        sender_type: 'ai',
+        content: handoffMessage
+      })
+
+      return NextResponse.json({
+        chatId: finalChatId,
+        reply: aiReply + '\n\n' + handoffMessage,
+        escalated: true
+      })
+    }
 
     return NextResponse.json({
       chatId: finalChatId,
-      reply: welcomeMessage,
-      escalated: true
+      reply: aiReply,
+      escalated: false
     })
   } catch (error) {
     console.error('Send message error:', error)

@@ -49,9 +49,13 @@ export default function SimpleChatWidget() {
   }
 
   const sendMessage = async () => {
-    if (!input.trim()) return
+    if (!input.trim()) {
+      console.log('SimpleChatWidget: Empty message, not sending')
+      return
+    }
     
     const messageText = input.trim()
+    console.log('SimpleChatWidget: Sending message:', messageText)
     setInput('')
     setIsLoading(true)
 
@@ -67,8 +71,11 @@ export default function SimpleChatWidget() {
         })
       })
 
+      console.log('SimpleChatWidget: Response status:', response.status)
+
       if (response.ok) {
         const data = await response.json()
+        console.log('SimpleChatWidget: Response data:', data)
         
         // Save chat ID if new
         if (!chatId && data.chatId) {
@@ -80,9 +87,13 @@ export default function SimpleChatWidget() {
         if (data.chatId) {
           await loadMessages(data.chatId)
         }
+      } else {
+        console.error('SimpleChatWidget: API error:', await response.text())
+        alert('Failed to send message. Please try again.')
       }
     } catch (error) {
-      console.error('Failed to send message:', error)
+      console.error('SimpleChatWidget: Failed to send message:', error)
+      alert('Failed to send message. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -105,9 +116,9 @@ export default function SimpleChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col" style={{ zIndex: 9999 }}>
+        <div className="fixed bottom-0 right-0 w-full h-[100dvh] sm:bottom-4 sm:right-4 sm:w-[360px] sm:h-[500px] sm:rounded-2xl bg-white shadow-2xl flex flex-col" style={{ zIndex: 9999 }}>
           {/* Header */}
-          <div className="bg-purple-600 text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+          <div className="bg-purple-600 text-white px-6 py-4 sm:rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                 <span className="text-2xl">🤖</span>
@@ -196,13 +207,21 @@ export default function SimpleChatWidget() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && !isLoading && sendMessage()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isLoading && input.trim()) {
+                    e.preventDefault()
+                    sendMessage()
+                  }
+                }}
                 placeholder="Type your message..."
                 disabled={isLoading}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-600 focus:outline-none disabled:opacity-50"
               />
               <button
-                onClick={sendMessage}
+                onClick={() => {
+                  console.log('SimpleChatWidget: Send button clicked')
+                  sendMessage()
+                }}
                 disabled={!input.trim() || isLoading}
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
