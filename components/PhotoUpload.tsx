@@ -150,7 +150,6 @@ export default function PhotoUpload({ onPhotosUploaded, existingPhotos = [], max
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         multiple
         onChange={handleFileSelect}
         className="hidden"
