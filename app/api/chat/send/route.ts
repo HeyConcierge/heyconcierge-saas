@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
     // Get AI response
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-5-sonnet-latest',
         max_tokens: 500,
         system: KNOWLEDGE_BASE,
         messages: [
