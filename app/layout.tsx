@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import CookieBanner from '@/components/ui/CookieBanner'
-import ChatWidget from '@/components/chat/ChatWidget'
+import ChatWidgetWrapper from '@/components/chat/ChatWidgetWrapper'
 
 export const metadata: Metadata = {
   title: 'HeyConcierge — Your Friendly AI Concierge',
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-quicksand">
         {children}
         <CookieBanner />
-        <ChatWidget />
+        <ChatWidgetWrapper />
       </body>
     </html>
   )
