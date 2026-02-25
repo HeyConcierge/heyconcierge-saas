@@ -1,0 +1,275 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
+
+interface Chat {
+  id: string
+  user_email: string | null
+  user_name: string | null
+  status: 'active' | 'escalated' | 'resolved'
+  created_at: string
+  escalated_at: string | null
+}
+
+interface Message {
+  id: string
+  sender_type: 'user' | 'ai' | 'human'
+  content: string
+  created_at: string
+}
+
+export default function ChatsPage() {
+  const [chats, setChats] = useState<Chat[]>([])
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [replyText, setReplyText] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSending, setIsSending] = useState(false)
+
+  useEffect(() => {
+    loadChats()
+  }, [])
+
+  useEffect(() => {
+    if (selectedChat) {
+      loadMessages(selectedChat.id)
+    }
+  }, [selectedChat])
+
+  const loadChats = async () => {
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('chats')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+      if (error) throw error
+      setChats(data || [])
+    } catch (error) {
+      console.error('Failed to load chats:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const loadMessages = async (chatId: string) => {
+    try {
+      const response = await fetch(`/api/chat/${chatId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(data.messages || [])
+      }
+    } catch (error) {
+      console.error('Failed to load messages:', error)
+    }
+  }
+
+  const sendReply = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedChat || !replyText.trim()) return
+
+    setIsSending(true)
+
+    try {
+      const supabase = createClient()
+
+      // Save human reply
+      await supabase.from('messages').insert({
+        chat_id: selectedChat.id,
+        sender_type: 'human',
+        content: replyText.trim()
+      })
+
+      // Add to local messages
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        sender_type: 'human',
+        content: replyText.trim(),
+        created_at: new Date().toISOString()
+      }])
+
+      setReplyText('')
+    } catch (error) {
+      console.error('Failed to send reply:', error)
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  const resolveChat = async () => {
+    if (!selectedChat) return
+
+    try {
+      const supabase = createClient()
+      await supabase
+        .from('chats')
+        .update({ status: 'resolved', resolved_at: new Date().toISOString() })
+        .eq('id', selectedChat.id)
+
+      setSelectedChat({ ...selectedChat, status: 'resolved' })
+      loadChats()
+    } catch (error) {
+      console.error('Failed to resolve chat:', error)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'escalated': return 'bg-red-100 text-red-800'
+      case 'resolved': return 'bg-green-100 text-green-800'
+      default: return 'bg-blue-100 text-blue-800'
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-dark">Customer Chats</h1>
+            <p className="text-muted mt-1">
+              {chats.filter(c => c.status === 'escalated').length} escalated • {chats.filter(c => c.status === 'active').length} active
+            </p>
+          </div>
+          <Link
+            href="/dashboard"
+            className="text-primary hover:text-dark transition"
+          >
+            ← Back to Dashboard
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-3 gap-6 h-[calc(100vh-180px)]">
+          {/* Chat List */}
+          <div className="bg-white rounded-xl shadow-sm overflow-y-auto">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="font-semibold">All Chats</h2>
+            </div>
+            <div className="divide-y">
+              {chats.map((chat) => (
+                <button
+                  key={chat.id}
+                  onClick={() => setSelectedChat(chat)}
+                  className={`w-full p-4 text-left hover:bg-gray-50 transition ${
+                    selectedChat?.id === chat.id ? 'bg-blue-50' : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">
+                        {chat.user_name || chat.user_email || 'Anonymous'}
+                      </p>
+                      {chat.user_email && chat.user_name && (
+                        <p className="text-xs text-gray-500">{chat.user_email}</p>
+                      )}
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(chat.status)}`}>
+                      {chat.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {new Date(chat.created_at).toLocaleString()}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="col-span-2 bg-white rounded-xl shadow-sm flex flex-col">
+            {selectedChat ? (
+              <>
+                {/* Chat Header */}
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <div>
+                    <h2 className="font-semibold">
+                      {selectedChat.user_name || selectedChat.user_email || 'Anonymous'}
+                    </h2>
+                    <p className="text-xs text-gray-500">
+                      Started {new Date(selectedChat.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  {selectedChat.status !== 'resolved' && (
+                    <button
+                      onClick={resolveChat}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition"
+                    >
+                      Mark Resolved
+                    </button>
+                  )}
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.sender_type === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[80%] px-4 py-2 rounded-2xl ${
+                          msg.sender_type === 'user'
+                            ? 'bg-blue-600 text-white'
+                            : msg.sender_type === 'human'
+                            ? 'bg-accent text-white'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {msg.sender_type !== 'user' && (
+                          <p className="text-xs opacity-80 mb-1">
+                            {msg.sender_type === 'human' ? 'You (Team)' : 'AI'}
+                          </p>
+                        )}
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          {new Date(msg.created_at).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Reply Input */}
+                <form onSubmit={sendReply} className="p-4 border-t border-gray-200">
+                  <div className="flex gap-2">
+                    <textarea
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Type your reply..."
+                      rows={3}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-primary focus:outline-none resize-none"
+                      disabled={isSending || selectedChat.status === 'resolved'}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSending || !replyText.trim() || selectedChat.status === 'resolved'}
+                      className="px-6 bg-primary text-white rounded-lg font-semibold hover:bg-dark transition disabled:opacity-50 disabled:cursor-not-allowed self-end"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-gray-500">
+                <p>Select a chat to view messages</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
