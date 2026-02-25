@@ -1,25 +1,91 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+interface Message {
+  id: string
+  sender_type: 'user' | 'ai' | 'human'
+  content: string
+  created_at: string
+}
 
 export default function SimpleChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Array<{text: string, isUser: boolean}>>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
+  const [chatId, setChatId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const sendMessage = () => {
+  // Load chat ID from localStorage on mount
+  useEffect(() => {
+    const savedChatId = localStorage.getItem('heyconcierge_chat_id')
+    if (savedChatId) {
+      setChatId(savedChatId)
+      loadMessages(savedChatId)
+    }
+  }, [])
+
+  // Poll for new messages every 5 seconds
+  useEffect(() => {
+    if (!chatId) return
+
+    const interval = setInterval(() => {
+      loadMessages(chatId)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [chatId])
+
+  const loadMessages = async (id: string) => {
+    try {
+      const response = await fetch(`/api/chat/${id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(data.messages || [])
+      }
+    } catch (error) {
+      console.error('Failed to load messages:', error)
+    }
+  }
+
+  const sendMessage = async () => {
     if (!input.trim()) return
     
-    setMessages([...messages, { text: input, isUser: true }])
+    const messageText = input.trim()
     setInput('')
-    
-    // Simple auto-reply
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        text: "Thanks for your message! Our team will respond shortly.", 
-        isUser: false 
-      }])
-    }, 500)
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatId: chatId || 'new',
+          message: messageText,
+          userEmail: '',
+          userName: ''
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Save chat ID if new
+        if (!chatId && data.chatId) {
+          setChatId(data.chatId)
+          localStorage.setItem('heyconcierge_chat_id', data.chatId)
+        }
+
+        // Reload messages to get both user message and AI reply
+        if (data.chatId) {
+          await loadMessages(data.chatId)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -64,22 +130,45 @@ export default function SimpleChatWidget() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-            <div className="flex justify-start">
-              <div className="bg-white border border-gray-200 px-4 py-2 rounded-2xl max-w-[80%]">
-                <p className="text-sm">Hi! 👋 How can I help you today?</p>
+            {messages.length === 0 && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-gray-200 px-4 py-2 rounded-2xl max-w-[80%]">
+                  <p className="text-sm">Hi! 👋 How can I help you today?</p>
+                </div>
               </div>
-            </div>
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
+            )}
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.sender_type === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`px-4 py-2 rounded-2xl max-w-[80%] ${
-                  msg.isUser 
+                  msg.sender_type === 'user'
                     ? 'bg-purple-600 text-white' 
+                    : msg.sender_type === 'human'
+                    ? 'bg-green-600 text-white'
                     : 'bg-white border border-gray-200 text-gray-800'
                 }`}>
-                  <p className="text-sm">{msg.text}</p>
+                  {msg.sender_type !== 'user' && (
+                    <p className="text-xs opacity-80 mb-1">
+                      {msg.sender_type === 'human' ? 'Team' : 'AI'}
+                    </p>
+                  )}
+                  <p className="text-sm">{msg.content}</p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {new Date(msg.created_at).toLocaleTimeString()}
+                  </p>
                 </div>
               </div>
             ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-gray-200 px-4 py-2 rounded-2xl">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Input */}
@@ -89,13 +178,14 @@ export default function SimpleChatWidget() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                onKeyPress={(e) => e.key === 'Enter' && !isLoading && sendMessage()}
                 placeholder="Type your message..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-600 focus:outline-none"
+                disabled={isLoading}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-600 focus:outline-none disabled:opacity-50"
               />
               <button
                 onClick={sendMessage}
-                disabled={!input.trim()}
+                disabled={!input.trim() || isLoading}
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
