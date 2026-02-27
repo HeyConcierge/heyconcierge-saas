@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       .from('properties')
       .select('id')
       .eq('id', property_id)
-      .eq('organization_id', org.id)
+      .eq('org_id', org.id)
       .single()
 
     if (!property) {
