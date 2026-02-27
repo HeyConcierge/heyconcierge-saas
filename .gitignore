@@ -1,3 +1,13 @@
 .env
+.env.local
+.env.*.local
 .polymarket_wallet.json
 trading_config.json
+node_modules/
+**/node_modules/
+.next/
+__pycache__/
+*.pyc
+.DS_Store
+venv/
+.venv/
