@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import { cookies } from 'next/headers'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdminSession } from '@/lib/admin-auth'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify admin session
-    const cookieStore = await cookies()
-    const adminSession = cookieStore.get('admin_session')
-    if (!adminSession?.value) {
+    // Verify admin session (validates token + MFA)
+    const session = await requireAdminSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -21,6 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert admin/human reply
+    const supabase = createAdminClient()
     const { data: message, error } = await supabase
       .from('messages')
       .insert({

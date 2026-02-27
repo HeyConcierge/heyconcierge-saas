@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+
+    const supabase = createAdminClient()
 
     // Get chat
     const { data: chat, error: chatError } = await supabase
@@ -40,6 +42,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = createAdminClient()
+
     // Delete messages first (foreign key constraint)
     const { error: messagesError } = await supabase
       .from('messages')
