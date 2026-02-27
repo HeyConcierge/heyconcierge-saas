@@ -8,6 +8,7 @@ import AnimatedMascot from '@/components/brand/AnimatedMascot'
 import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 import PhotoUpload from '@/components/PhotoUpload'
+import AddressAutocomplete from '@/components/AddressAutocomplete'
 
 const TestConcierge = dynamic(() => import('@/components/features/TestConcierge'), { ssr: false })
 
@@ -60,6 +61,8 @@ function NewPropertyPage() {
     propertyCity: '',
     propertyCountry: 'NO',
     propertyType: 'Apartment',
+    propertyLatitude: null as number | null,
+    propertyLongitude: null as number | null,
     propertyImages: [] as string[],
     icalUrl: '',
     wifi: '',
@@ -208,6 +211,8 @@ function NewPropertyPage() {
           country: form.propertyCountry,
           property_type: form.propertyType,
           images: form.propertyImages,
+          latitude: form.propertyLatitude,
+          longitude: form.propertyLongitude,
           ical_url: form.icalUrl || null,
           whatsapp_number: '',
         })
@@ -366,7 +371,21 @@ function NewPropertyPage() {
             </div>
             <div className="space-y-4">
               <Input label="Property Name *" value={form.propertyName} onChange={v => update('propertyName', v)} placeholder="Aurora Haven Beach Villa" />
-              <Input label="Street Address" value={form.propertyAddress} onChange={v => update('propertyAddress', v)} placeholder="123 Sunset Blvd" />
+              <AddressAutocomplete
+                value={form.propertyAddress}
+                onChange={v => update('propertyAddress', v)}
+                onAddressSelect={(result) => {
+                  setForm(f => ({
+                    ...f,
+                    propertyAddress: result.streetAddress,
+                    propertyPostalCode: result.postalCode || f.propertyPostalCode,
+                    propertyCity: result.city || f.propertyCity,
+                    propertyCountry: result.country || f.propertyCountry,
+                    propertyLatitude: result.latitude,
+                    propertyLongitude: result.longitude,
+                  }))
+                }}
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <Input label="Postal Code *" value={form.propertyPostalCode} onChange={v => update('propertyPostalCode', v)} placeholder="0150" />

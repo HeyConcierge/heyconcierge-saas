@@ -8,6 +8,7 @@ import { ToastProvider, useToast } from '@/components/ui/Toast'
 import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 import MergeOverwriteModal from '@/components/MergeOverwriteModal'
+import AddressAutocomplete from '@/components/AddressAutocomplete'
 
 const TestConcierge = dynamic(() => import('@/components/features/TestConcierge'), { ssr: false })
 
@@ -82,12 +83,16 @@ function PropertySettingsPage() {
       property_type: newProp?.property_type,
       whatsapp_number: newProp?.whatsapp_number,
       ical_url: newProp?.ical_url,
+      latitude: newProp?.latitude,
+      longitude: newProp?.longitude,
     }) !== JSON.stringify({
       name: savedPropertyRef.current.name,
       address: savedPropertyRef.current.address,
       property_type: savedPropertyRef.current.property_type,
       whatsapp_number: savedPropertyRef.current.whatsapp_number,
       ical_url: savedPropertyRef.current.ical_url,
+      latitude: savedPropertyRef.current.latitude,
+      longitude: savedPropertyRef.current.longitude,
     })
     const configChanged = JSON.stringify({
       wifi_network: newConfig?.wifi_network || '',
@@ -571,10 +576,22 @@ function PropertySettingsPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold mb-1.5 text-dark">Address</label>
-              <input type="text" value={property.address} onChange={(e) => updateProperty({ address: e.target.value })} className={inputClass} />
-            </div>
+            <AddressAutocomplete
+              value={property.address || ''}
+              onChange={(v) => updateProperty({ address: v })}
+              onAddressSelect={(result) => {
+                updateProperty({
+                  address: result.streetAddress,
+                  postal_code: result.postalCode || property.postal_code,
+                  city: result.city || property.city,
+                  country: result.country || property.country,
+                  latitude: result.latitude,
+                  longitude: result.longitude,
+                })
+              }}
+              label="Address"
+              className={inputClass}
+            />
 
             <div>
               <label className="block text-sm font-bold mb-1.5 text-dark">Your Phone Number</label>
