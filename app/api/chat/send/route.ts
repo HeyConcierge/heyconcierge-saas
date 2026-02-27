@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase/admin'
 import Anthropic from '@anthropic-ai/sdk'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 function getAnthropic() {
   return new Anthropic({
@@ -94,6 +95,14 @@ function shouldEscalate(message: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 10 messages per minute per IP
+    const ip = getClientIp(request)
+    const { allowed } = checkRateLimit(ip, 'chat-send', { limit: 10, windowSeconds: 60 })
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
+    const supabase = createAdminClient()
     const { chatId, message, userEmail, userName } = await request.json()
 
 
