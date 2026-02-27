@@ -112,6 +112,12 @@ function extractBookings(events: ParsedEvent[], propertyId: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify CRON_SECRET (same pattern as upsell cron)
+    const authHeader = request.headers.get('authorization')
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const supabase = getSupabase()
     // Get all properties with iCal URLs
     const { data: properties, error: fetchError } = await supabase
